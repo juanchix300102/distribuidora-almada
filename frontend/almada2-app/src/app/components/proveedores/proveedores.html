@@ -1,0 +1,297 @@
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <h2>Proveedores</h2>
+      <p>Entrá a cada proveedor para ver su lista de precios.</p>
+    </div>
+
+    <div class="topbar-actions">
+      <button type="button" *ngIf="!proveedorSeleccionado" (click)="abrirFormularioProveedor()">
+        + Agregar proveedor
+      </button>
+
+      <button type="button" *ngIf="proveedorSeleccionado" class="btn-volver-tabla" (click)="volverAProveedores()">
+        Volver a proveedores
+      </button>
+    </div>
+  </div>
+
+  <section *ngIf="error" class="error">
+    {{ error }}
+  </section>
+
+  <p *ngIf="cargando">Cargando proveedores...</p>
+
+  <section *ngIf="!proveedorSeleccionado && mostrarFormularioProveedor" class="formulario formulario-mini">
+    <div class="formulario-header">
+      <h2>Agregar nuevo proveedor</h2>
+
+      <button type="button" class="btn-cerrar notranslate" (click)="cerrarFormularioProveedor()">
+        ✕
+      </button>
+    </div>
+
+    <form (ngSubmit)="agregarProveedor()">
+      <div class="form-grid grande">
+        <input
+          type="text"
+          placeholder="Nombre del proveedor"
+          [(ngModel)]="proveedorForm.nombre"
+          name="nombreProveedor"
+          required
+        />
+
+        <input
+          type="text"
+          placeholder="Teléfono"
+          [(ngModel)]="proveedorForm.telefono"
+          name="telefonoProveedor"
+        />
+
+        <input
+          type="text"
+          placeholder="Dirección"
+          [(ngModel)]="proveedorForm.direccion"
+          name="direccionProveedor"
+        />
+
+        <input
+          type="text"
+          placeholder="Localidad"
+          [(ngModel)]="proveedorForm.localidad"
+          name="localidadProveedor"
+        />
+
+        <input
+          type="text"
+          placeholder="Contacto"
+          [(ngModel)]="proveedorForm.contacto"
+          name="contactoProveedor"
+        />
+
+        <input
+          type="text"
+          class="input-full"
+          placeholder="Observaciones"
+          [(ngModel)]="proveedorForm.observaciones"
+          name="observacionesProveedor"
+        />
+      </div>
+
+      <button type="submit">
+        Guardar proveedor
+      </button>
+    </form>
+  </section>
+
+  <div *ngIf="!proveedorSeleccionado && !cargando && proveedores.length === 0" class="sin-datos">
+    No hay proveedores cargados.
+  </div>
+
+  <div *ngIf="!proveedorSeleccionado" class="proveedores-grid">
+    <div
+      class="proveedor-card"
+      *ngFor="let proveedor of proveedores"
+      (click)="seleccionarProveedor(proveedor)"
+    >
+      <h3>{{ proveedor.nombre }}</h3>
+      <p>Ver lista de productos</p>
+    </div>
+  </div>
+
+  <div *ngIf="proveedorSeleccionado">
+    <div class="proveedor-titulo">
+      <h2>Proveedor: {{ proveedorSeleccionado.nombre }}</h2>
+      <p>Tabla editable tipo Excel para calcular precio final de compra y precio de venta.</p>
+    </div>
+
+    <section class="formulario formulario-mini">
+      <h2>Agregar producto a {{ proveedorSeleccionado.nombre }}</h2>
+
+      <form (ngSubmit)="agregarProductoProveedor()">
+        <div class="form-grid grande">
+          <input
+            type="text"
+            placeholder="Código"
+            [(ngModel)]="nuevoProductoProveedor.codigo"
+            name="nuevoCodigo"
+          />
+
+          <input
+            type="text"
+            placeholder="Producto"
+            [(ngModel)]="nuevoProductoProveedor.nombre"
+            name="nuevoNombre"
+            required
+          />
+
+          <input
+            type="text"
+            placeholder="Categoría"
+            [(ngModel)]="nuevoProductoProveedor.categoria"
+            name="nuevaCategoria"
+          />
+
+          <input
+            type="number"
+            placeholder="Stock"
+            [(ngModel)]="nuevoProductoProveedor.stock"
+            name="nuevoStock"
+          />
+
+          <input
+            type="number"
+            placeholder="Precio base"
+            [(ngModel)]="nuevoProductoProveedor.precio_base"
+            name="nuevoPrecioBase"
+          />
+
+          <input
+            type="number"
+            placeholder="Bonif. 1 %"
+            [(ngModel)]="nuevoProductoProveedor.bonificacion_1"
+            name="nuevoBonif1"
+          />
+
+          <input
+            type="number"
+            placeholder="Bonif. 2 %"
+            [(ngModel)]="nuevoProductoProveedor.bonificacion_2"
+            name="nuevoBonif2"
+          />
+
+          <input
+            type="number"
+            placeholder="Bonif. 3 %"
+            [(ngModel)]="nuevoProductoProveedor.bonificacion_3"
+            name="nuevoBonif3"
+          />
+
+          <input
+            type="number"
+            placeholder="IVA %"
+            [(ngModel)]="nuevoProductoProveedor.iva"
+            name="nuevoIva"
+          />
+
+          <input
+            type="number"
+            placeholder="Flete %"
+            [(ngModel)]="nuevoProductoProveedor.flete"
+            name="nuevoFlete"
+          />
+
+          <input
+            type="number"
+            placeholder="Ganancia %"
+            [(ngModel)]="nuevoProductoProveedor.ganancia"
+            name="nuevoGanancia"
+          />
+
+          <input
+            type="number"
+            placeholder="Cant. por caja"
+            [(ngModel)]="nuevoProductoProveedor.cantidad_caja"
+            name="nuevoCantidadCaja"
+          />
+
+          <input
+            type="text"
+            class="input-full"
+            placeholder="Descripción"
+            [(ngModel)]="nuevoProductoProveedor.descripcion"
+            name="nuevoDescripcion"
+          />
+        </div>
+
+        <button type="submit">
+          Agregar a la lista
+        </button>
+      </form>
+    </section>
+
+    <div class="proveedor-buscador">
+      <input
+        type="text"
+        placeholder="Buscar producto del proveedor..."
+        [(ngModel)]="busquedaProveedor"
+        name="busquedaProveedor"
+      />
+    </div>
+
+    <div *ngIf="productosProveedorFiltrados().length === 0" class="sin-datos">
+      No hay productos cargados para este proveedor.
+    </div>
+
+    <div class="tabla-scroll" *ngIf="productosProveedorFiltrados().length > 0">
+      <table class="tabla-precios">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Precio base</th>
+            <th>Bonif. 1 %</th>
+            <th>Bonif. 2 %</th>
+            <th>Bonif. 3 %</th>
+            <th>IVA %</th>
+            <th>Flete %</th>
+            <th>Precio final compra</th>
+            <th>Ganancia %</th>
+            <th>Precio de venta</th>
+            <th>Guardar</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let producto of productosProveedorFiltrados()">
+            <td>
+              <strong>{{ producto.producto }}</strong>
+              <small>Cód: {{ producto.codigo || '-' }} | Stock: {{ producto.stock }}</small>
+            </td>
+
+            <td>
+              <input type="number" [(ngModel)]="producto.precio_base" name="precioBase{{ producto.precio_id }}" />
+            </td>
+
+            <td>
+              <input type="number" [(ngModel)]="producto.bonificacion_1" name="bonif1{{ producto.precio_id }}" />
+            </td>
+
+            <td>
+              <input type="number" [(ngModel)]="producto.bonificacion_2" name="bonif2{{ producto.precio_id }}" />
+            </td>
+
+            <td>
+              <input type="number" [(ngModel)]="producto.bonificacion_3" name="bonif3{{ producto.precio_id }}" />
+            </td>
+
+            <td>
+              <input type="number" [(ngModel)]="producto.iva" name="iva{{ producto.precio_id }}" />
+            </td>
+
+            <td>
+              <input type="number" [(ngModel)]="producto.flete" name="flete{{ producto.precio_id }}" />
+            </td>
+
+            <td class="precio-calculado">
+              ${{ formatearMoneda(producto.precio_final_compra) }}
+            </td>
+
+            <td>
+              <input type="number" [(ngModel)]="producto.ganancia" name="ganancia{{ producto.precio_id }}" />
+            </td>
+
+            <td class="precio-venta">
+              ${{ formatearMoneda(producto.precio_venta) }}
+            </td>
+
+            <td>
+              <button type="button" class="btn-editar" (click)="actualizarPrecioProveedor(producto)">
+                Guardar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

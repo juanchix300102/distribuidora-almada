@@ -1,0 +1,42 @@
+<section class="login">
+  <div class="login-card">
+    <div class="login-logo-placeholder" aria-hidden="true">
+      A2
+    </div>
+
+    <h1>Almada 2</h1>
+    <p>Acceso exclusivo para administración y vendedores autorizados.</p>
+
+    <form (ngSubmit)="iniciarSesion()">
+      <input
+        type="text"
+        placeholder="Usuario"
+        [(ngModel)]="loginForm.usuario"
+        name="usuario"
+        autocomplete="username"
+        required
+      />
+
+      <input
+        type="password"
+        placeholder="Contraseña"
+        [(ngModel)]="loginForm.contrasena"
+        name="contrasena"
+        autocomplete="current-password"
+        required
+      />
+
+      <button type="submit" [disabled]="ingresando">
+        {{ ingresando ? 'Ingresando...' : 'Ingresar' }}
+      </button>
+    </form>
+
+    <p *ngIf="loginError" class="login-error">
+      {{ loginError }}
+    </p>
+
+    <p class="login-ayuda">
+      Los clientes se cargan únicamente desde el panel interno.
+    </p>
+  </div>
+</section>

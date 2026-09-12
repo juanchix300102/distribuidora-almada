@@ -1,0 +1,579 @@
+<section class="cards" *ngIf="resumen">
+  <div class="card">
+    <span>Productos cargados</span>
+    <strong>{{ resumen.productos_cargados }}</strong>
+  </div>
+
+  <div class="card">
+    <span>Proveedores</span>
+    <strong>{{ resumen.proveedores }}</strong>
+  </div>
+
+  <div class="card">
+    <span>Clientes</span>
+    <strong>{{ resumen.clientes }}</strong>
+  </div>
+
+  <div class="card warning">
+    <span>Stock bajo</span>
+    <strong>{{ resumen.stock_bajo }}</strong>
+  </div>
+
+  <div class="card warning">
+    <span>Saldo clientes</span>
+    <strong>
+      ${{ formatearMoneda(resumen.saldo_clientes) }}
+    </strong>
+  </div>
+
+  <div class="card success">
+    <span>Ventas del mes</span>
+    <strong>
+      ${{ formatearMoneda(resumen.ventas_mes) }}
+    </strong>
+  </div>
+</section>
+
+<section *ngIf="error" class="error">
+  {{ error }}
+</section>
+
+<section
+  *ngIf="mostrarFormulario"
+  class="formulario"
+>
+  <div class="formulario-header">
+    <div>
+      <h2>
+        {{
+          modoEditar
+            ? 'Editar producto'
+            : 'Agregar nuevo producto'
+        }}
+      </h2>
+
+      <p class="formulario-subtitulo">
+        Cargá el producto una sola vez y agregá debajo
+        todas sus medidas, modelos u opciones.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="btn-cerrar notranslate"
+      (click)="cerrarFormulario()"
+    >
+      ✕
+    </button>
+  </div>
+
+  <form (ngSubmit)="guardarProducto()">
+    <div class="bloque-formulario">
+      <div class="bloque-titulo">
+        <div>
+          <h3>Producto principal</h3>
+          <p>
+            Estos datos son compartidos por todas las variantes.
+          </p>
+        </div>
+      </div>
+
+      <div class="form-grid grande">
+        <div class="campo">
+          <label>Proveedor *</label>
+
+          <select
+            [(ngModel)]="productoForm.proveedor_id"
+            name="proveedorProducto"
+            [disabled]="modoEditar"
+            required
+          >
+            <option [ngValue]="null">
+              Seleccionar proveedor
+            </option>
+
+            <option
+              *ngFor="let proveedor of proveedores"
+              [ngValue]="proveedor.id"
+            >
+              {{ proveedor.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label>Nombre del producto *</label>
+
+          <input
+            type="text"
+            placeholder="Ej: Bisagra libro"
+            [(ngModel)]="productoForm.nombre"
+            name="nombre"
+            required
+          />
+        </div>
+
+        <div class="campo">
+          <label>Categoría</label>
+
+          <input
+            type="text"
+            placeholder="Ej: Bisagras"
+            [(ngModel)]="productoForm.categoria"
+            name="categoria"
+          />
+        </div>
+
+        <div class="campo input-full">
+          <label>Descripción</label>
+
+          <textarea
+            rows="3"
+            placeholder="Descripción general del producto"
+            [(ngModel)]="productoForm.descripcion"
+            name="descripcion"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="bloque-formulario"
+      *ngIf="!modoEditar"
+    >
+      <div class="bloque-titulo">
+        <div>
+          <h3>Datos comerciales del proveedor</h3>
+          <p>
+            Se mantienen los cálculos que ya utilizaba el sistema.
+          </p>
+        </div>
+      </div>
+
+      <div class="form-grid grande">
+        <div class="campo">
+          <label>Precio base</label>
+
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="productoForm.precio_base"
+            name="precioBase"
+          />
+        </div>
+
+        <div class="campo">
+          <label>Bonificación 1 %</label>
+
+          <input
+            type="number"
+            step="0.01"
+            [(ngModel)]="productoForm.bonificacion_1"
+            name="bonif1"
+          />
+        </div>
+
+        <div class="campo">
+          <label>Bonificación 2 %</label>
+
+          <input
+            type="number"
+            step="0.01"
+            [(ngModel)]="productoForm.bonificacion_2"
+            name="bonif2"
+          />
+        </div>
+
+        <div class="campo">
+          <label>Bonificación 3 %</label>
+
+          <input
+            type="number"
+            step="0.01"
+            [(ngModel)]="productoForm.bonificacion_3"
+            name="bonif3"
+          />
+        </div>
+
+        <div class="campo">
+          <label>IVA %</label>
+
+          <input
+            type="number"
+            step="0.01"
+            [(ngModel)]="productoForm.iva"
+            name="iva"
+          />
+        </div>
+
+        <div class="campo">
+          <label>Flete %</label>
+
+          <input
+            type="number"
+            step="0.01"
+            [(ngModel)]="productoForm.flete"
+            name="flete"
+          />
+        </div>
+
+        <div class="campo">
+          <label>Ganancia %</label>
+
+          <input
+            type="number"
+            step="0.01"
+            [(ngModel)]="productoForm.ganancia"
+            name="ganancia"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="bloque-formulario bloque-variantes">
+      <div class="bloque-titulo variantes-header">
+        <div>
+          <h3>Variantes del producto</h3>
+
+          <p>
+            Cada medida o modelo puede tener su propio código,
+            precio, presentación y stock.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="btn-agregar-variante"
+          (click)="agregarVariante()"
+        >
+          + Agregar variante
+        </button>
+      </div>
+
+      <div class="ayuda-variante">
+        <strong>Ejemplo:</strong>
+        para una Bisagra Libro podés crear
+        25 mm, 38 mm, 51 mm y 63 mm.
+        Si el producto no tiene medidas, dejá
+        <strong>Única</strong>.
+      </div>
+
+      <div class="variantes-scroll">
+        <table class="tabla-variantes">
+          <thead>
+            <tr>
+              <th>Medida / modelo *</th>
+              <th>Código</th>
+              <th>Cant. caja</th>
+              <th>Precio unidad</th>
+              <th>Precio caja</th>
+              <th>Precio venta</th>
+              <th>Stock</th>
+              <th></th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr
+              *ngFor="
+                let variante of productoForm.variantes;
+                let i = index
+              "
+            >
+              <td>
+                <input
+                  type="text"
+                  placeholder="Ej: 25 mm"
+                  [(ngModel)]="variante.nombre_variante"
+                  name="varianteNombre{{ i }}"
+                  required
+                />
+              </td>
+
+              <td>
+                <input
+                  type="text"
+                  placeholder="Código"
+                  [(ngModel)]="variante.codigo"
+                  name="varianteCodigo{{ i }}"
+                />
+              </td>
+
+              <td>
+                <input
+                  type="number"
+                  min="1"
+                  [(ngModel)]="variante.cantidad_caja"
+                  name="varianteCajaCantidad{{ i }}"
+                />
+              </td>
+
+              <td>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  [(ngModel)]="variante.precio_unidad"
+                  name="variantePrecioUnidad{{ i }}"
+                />
+              </td>
+
+              <td>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  [(ngModel)]="variante.precio_caja"
+                  name="variantePrecioCaja{{ i }}"
+                />
+              </td>
+
+              <td>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  [(ngModel)]="variante.precio_venta"
+                  name="variantePrecioVenta{{ i }}"
+                />
+              </td>
+
+              <td>
+                <input
+                  type="number"
+                  min="0"
+                  [(ngModel)]="variante.stock"
+                  name="varianteStock{{ i }}"
+                />
+              </td>
+
+              <td>
+                <button
+                  type="button"
+                  class="btn-quitar-variante"
+                  (click)="eliminarVariante(i)"
+                  title="Quitar variante"
+                >
+                  ✕
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="contador-variantes">
+        {{ productoForm.variantes.length }}
+        variante(s) cargada(s)
+      </div>
+    </div>
+
+    <div class="acciones-formulario">
+      <button
+        type="button"
+        class="btn-cancelar"
+        (click)="cerrarFormulario()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="submit"
+        [disabled]="guardando"
+      >
+        {{
+          guardando
+            ? 'Guardando...'
+            : modoEditar
+              ? 'Actualizar producto'
+              : 'Guardar producto'
+        }}
+      </button>
+    </div>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <h2>Productos registrados</h2>
+
+      <p>
+        Cada fila representa un producto principal.
+        Sus medidas y modelos se administran como variantes.
+      </p>
+    </div>
+
+    <div class="panel-actions">
+      <input
+        type="text"
+        placeholder="Buscar producto, medida o código..."
+        [(ngModel)]="busqueda"
+        name="busqueda"
+      />
+
+      <button
+        type="button"
+        (click)="abrirFormulario()"
+      >
+        + Agregar producto
+      </button>
+    </div>
+  </div>
+
+  <p *ngIf="cargando">
+    Cargando productos...
+  </p>
+
+  <div
+    *ngIf="
+      !cargando &&
+      productosFiltrados().length === 0
+    "
+    class="sin-datos"
+  >
+    No hay productos cargados.
+  </div>
+
+  <div
+    class="tabla-scroll"
+    *ngIf="
+      !cargando &&
+      productosFiltrados().length > 0
+    "
+  >
+    <table class="tabla-productos">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Proveedor</th>
+          <th>Categoría</th>
+          <th>Variantes</th>
+          <th>Precio desde</th>
+          <th>Stock total</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr
+          *ngFor="let producto of productosFiltrados()"
+        >
+          <td>
+            <div class="producto-nombre">
+              {{ producto.nombre }}
+            </div>
+
+            <div
+              class="producto-descripcion"
+              *ngIf="producto.descripcion"
+            >
+              {{ producto.descripcion }}
+            </div>
+          </td>
+
+          <td>
+            {{ producto.proveedor || '-' }}
+          </td>
+
+          <td>
+            {{ producto.categoria || '-' }}
+          </td>
+
+          <td>
+            <div
+              *ngIf="
+                cantidadVariantesProducto(producto) > 0;
+                else sinVariantes
+              "
+            >
+              <span class="badge-variantes">
+                {{
+                  cantidadVariantesProducto(producto)
+                }}
+                variante(s)
+              </span>
+
+              <div class="lista-variantes-mini">
+                <span
+                  *ngFor="
+                    let variante of
+                      (producto.variantes || [])
+                      | slice:0:3
+                  "
+                >
+                  {{ $any(variante).nombre_variante }}
+                </span>
+
+                <span
+                  *ngIf="
+                    cantidadVariantesProducto(producto) > 3
+                  "
+                >
+                  +{{
+                    cantidadVariantesProducto(producto) - 3
+                  }}
+                </span>
+              </div>
+            </div>
+
+            <ng-template #sinVariantes>
+              <span class="badge-sin-variantes">
+                Producto anterior
+              </span>
+            </ng-template>
+          </td>
+
+          <td>
+            <strong>
+              ${{
+                formatearMoneda(
+                  precioDesdeProducto(producto)
+                )
+              }}
+            </strong>
+          </td>
+
+          <td>
+            {{ stockTotalProducto(producto) }}
+          </td>
+
+          <td>
+            <span
+              class="estado"
+              [class.bajo]="
+                stockBajoProducto(producto)
+              "
+            >
+              {{
+                stockBajoProducto(producto)
+                  ? 'Revisar stock'
+                  : 'Disponible'
+              }}
+            </span>
+          </td>
+
+          <td class="acciones">
+            <button
+              type="button"
+              class="btn-editar"
+              (click)="editarProducto(producto)"
+            >
+              Editar
+            </button>
+
+            <button
+              type="button"
+              class="btn-eliminar"
+              (click)="eliminarProducto(producto.id)"
+            >
+              Eliminar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

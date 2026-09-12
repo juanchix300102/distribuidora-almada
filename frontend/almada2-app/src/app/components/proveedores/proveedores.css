@@ -1,0 +1,262 @@
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  background: #2563eb;
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+input,
+select {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+  outline: none;
+  background: white;
+  color: #111827;
+  font-size: 15px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+input:focus,
+select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.panel,
+.formulario {
+  background: white;
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+}
+
+.panel-header,
+.formulario-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.panel-header h2,
+.formulario h2 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.panel-header p {
+  margin: 6px 0 0;
+  color: #6b7280;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-volver-tabla,
+.btn-cerrar {
+  background: #111827;
+}
+
+.btn-volver-tabla:hover,
+.btn-cerrar:hover {
+  background: #000;
+}
+
+.btn-cerrar {
+  padding: 8px 12px;
+}
+
+.formulario-mini {
+  margin-bottom: 18px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.form-grid.grande {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.input-full {
+  grid-column: 1 / -1;
+}
+
+.formulario button[type="submit"] {
+  margin-top: 16px;
+}
+
+.error {
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  font-weight: 700;
+}
+
+.sin-datos {
+  padding: 18px;
+  background: #f3f4f6;
+  border-radius: 14px;
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.proveedores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.proveedor-card {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 18px;
+  padding: 20px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.proveedor-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.proveedor-card h3 {
+  margin: 0;
+  color: #111827;
+}
+
+.proveedor-card p {
+  margin: 8px 0 0;
+  color: #6b7280;
+}
+
+.proveedor-titulo {
+  background: #111827;
+  color: white;
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.proveedor-titulo h2 {
+  margin: 0;
+}
+
+.proveedor-titulo p {
+  margin: 6px 0 0;
+  color: #d1d5db;
+}
+
+.proveedor-buscador {
+  margin-bottom: 18px;
+}
+
+.tabla-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1100px;
+}
+
+th {
+  background: #eff6ff;
+  color: #111827;
+  text-align: left;
+  padding: 13px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+  font-size: 14px;
+}
+
+td small {
+  display: block;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+tr:hover {
+  background: #eff6ff;
+}
+
+.tabla-precios input {
+  min-width: 100px;
+  padding: 8px;
+}
+
+.precio-calculado {
+  font-weight: 800;
+  color: #111827;
+}
+
+.precio-venta {
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.btn-editar {
+  background: #2563eb;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.btn-editar:hover {
+  background: #1d4ed8;
+}
+
+@media (max-width: 900px) {
+  .panel-header,
+  .formulario-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .panel-header button,
+  .topbar-actions {
+    width: 100%;
+  }
+
+  .topbar-actions button {
+    width: 100%;
+  }
+
+  .form-grid.grande {
+    grid-template-columns: 1fr;
+  }
+
+  table {
+    min-width: 1100px;
+  }
+}

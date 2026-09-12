@@ -1,0 +1,144 @@
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <h2>Clientes</h2>
+      <p>Registro interno de clientes y sus datos comerciales.</p>
+    </div>
+
+    <button type="button" (click)="abrirFormularioCliente()">
+      + Agregar cliente
+    </button>
+  </div>
+
+  <section *ngIf="error" class="error">
+    {{ error }}
+  </section>
+
+  <p *ngIf="cargando">Cargando clientes...</p>
+
+  <section *ngIf="mostrarFormularioCliente" class="formulario formulario-mini">
+    <div class="formulario-header">
+      <h2>{{ modoEditarCliente ? 'Editar cliente' : 'Agregar nuevo cliente' }}</h2>
+
+      <button type="button" class="btn-cerrar notranslate" (click)="cerrarFormularioCliente()">
+        ✕
+      </button>
+    </div>
+
+    <form (ngSubmit)="guardarCliente()">
+      <div class="form-grid grande">
+        <input
+          type="text"
+          [placeholder]="modoEditarCliente ? 'Número de cliente' : 'Se genera automáticamente'"
+          [(ngModel)]="clienteForm.numero_cliente"
+          name="numeroCliente"
+          [readonly]="!modoEditarCliente"
+        />
+
+        <input
+          type="text"
+          placeholder="Nombre / Razón social"
+          [(ngModel)]="clienteForm.nombre"
+          name="nombreCliente"
+          required
+        />
+
+        <input
+          type="text"
+          placeholder="Dirección"
+          [(ngModel)]="clienteForm.direccion"
+          name="direccionCliente"
+        />
+
+        <input
+          type="text"
+          placeholder="Localidad"
+          [(ngModel)]="clienteForm.localidad"
+          name="localidadCliente"
+        />
+
+        <input
+          type="text"
+          placeholder="Teléfono"
+          [(ngModel)]="clienteForm.telefono"
+          name="telefonoCliente"
+        />
+
+        <input
+          type="email"
+          placeholder="Email"
+          [(ngModel)]="clienteForm.email"
+          name="emailCliente"
+        />
+
+        <input
+          type="number"
+          placeholder="Saldo actual"
+          [(ngModel)]="clienteForm.saldo_actual"
+          name="saldoCliente"
+        />
+
+        <input
+          type="text"
+          class="input-full"
+          placeholder="Observaciones"
+          [(ngModel)]="clienteForm.observaciones"
+          name="observacionesCliente"
+        />
+      </div>
+
+      <button type="submit">
+        {{ modoEditarCliente ? 'Actualizar cliente' : 'Guardar cliente' }}
+      </button>
+    </form>
+  </section>
+
+  <div *ngIf="!cargando && clientes.length === 0" class="sin-datos">
+    No hay clientes cargados.
+  </div>
+
+  <div class="tabla-scroll" *ngIf="!cargando && clientes.length > 0">
+    <table>
+      <thead>
+        <tr>
+          <th>N° Cliente</th>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Localidad</th>
+          <th>Dirección</th>
+          <th>Teléfono</th>
+          <th>Saldo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let cliente of clientes">
+          <td>{{ cliente.numero_cliente }}</td>
+          <td><strong>{{ cliente.nombre }}</strong></td>
+          <td>{{ cliente.email || '-' }}</td>
+          <td>{{ cliente.localidad || '-' }}</td>
+          <td>{{ cliente.direccion || '-' }}</td>
+          <td>{{ cliente.telefono || '-' }}</td>
+          <td>
+            <strong>${{ formatearMoneda(cliente.saldo_actual) }}</strong>
+          </td>
+
+          <td class="acciones">
+            <button type="button" class="btn-editar" (click)="abrirCuentaCliente(cliente)">
+              Ver cuenta
+            </button>
+
+            <button type="button" class="btn-editar" (click)="editarCliente(cliente)">
+              Editar
+            </button>
+
+            <button type="button" class="btn-eliminar" (click)="eliminarCliente(cliente.id)">
+              Eliminar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

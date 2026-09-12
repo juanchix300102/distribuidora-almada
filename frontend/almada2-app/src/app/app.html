@@ -1,0 +1,135 @@
+<app-auth
+  *ngIf="vista === 'login'"
+  (loginExitoso)="procesarLogin($event)">
+</app-auth>
+
+<div class="layout" *ngIf="autenticado && vista !== 'login'">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo-placeholder" aria-hidden="true">A2</div>
+
+      <div>
+        <h2>Almada 2</h2>
+        <p>Sistema comercial interno</p>
+      </div>
+    </div>
+
+    <nav>
+      <a
+        [class.active]="vista === 'panel'"
+        (click)="cambiarVista('panel')"
+      >
+        Panel
+      </a>
+
+      <a
+        [class.active]="vista === 'proveedores'"
+        (click)="cambiarVista('proveedores')"
+      >
+        Proveedores
+      </a>
+
+      <a
+        [class.active]="vista === 'clientes'"
+        (click)="cambiarVista('clientes')"
+      >
+        Clientes
+      </a>
+
+      <a
+        [class.active]="
+          vista === 'cuenta-corriente-lista' ||
+          vista === 'cuenta-corriente'
+        "
+        (click)="cambiarVista('cuenta-corriente-lista')"
+      >
+        Cuenta corriente
+      </a>
+
+      <div class="nav-separador">Próximas etapas</div>
+
+      <a class="disabled">Catálogo visual</a>
+      <a class="disabled">Vendedores</a>
+      <a class="disabled">Stock en viaje</a>
+      <a class="disabled">Ventas</a>
+      <a class="disabled">Aumentos de precios</a>
+      <a class="disabled">Gastos</a>
+      <a class="disabled">Saldos</a>
+      <a class="disabled">Reportes</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <header class="topbar">
+      <div>
+        <span class="etiqueta">Almada 2</span>
+
+        <h1>
+          {{
+            vista === 'panel'
+              ? 'Resumen general'
+              : vista === 'proveedores'
+                ? 'Proveedores y precios'
+                : vista === 'clientes'
+                  ? 'Clientes'
+                  : vista === 'cuenta-corriente-lista'
+                    ? 'Cuenta corriente'
+                    : 'Detalle de cuenta'
+          }}
+        </h1>
+
+        <p>
+          {{
+            vista === 'panel'
+              ? 'Indicadores principales del sistema comercial.'
+              : vista === 'proveedores'
+                ? 'Proveedores y costos de los productos.'
+                : vista === 'clientes'
+                  ? 'Registro interno y datos comerciales de clientes.'
+                  : vista === 'cuenta-corriente-lista'
+                    ? 'Buscá clientes, revisá saldos y accedé a sus cuentas.'
+                    : 'Pagos, deudas y movimientos del cliente.'
+          }}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="btn-cerrar-sesion"
+        (click)="cerrarSesion()"
+      >
+        Cerrar sesión
+      </button>
+    </header>
+
+    <section *ngIf="error" class="error">
+      {{ error }}
+    </section>
+
+    <app-productos-admin
+      *ngIf="vista === 'panel'"
+      [resumen]="resumen"
+      (resumenActualizado)="cargarResumen()">
+    </app-productos-admin>
+
+    <app-proveedores
+      *ngIf="vista === 'proveedores'"
+      (resumenActualizado)="cargarResumen()">
+    </app-proveedores>
+
+    <app-clientes
+      *ngIf="vista === 'clientes'"
+      (verCuenta)="abrirCuentaCorrienteDesdeClientes($event)"
+      (clientesActualizados)="cargarResumen()">
+    </app-clientes>
+
+    <app-cuentas-corrientes
+      *ngIf="
+        vista === 'cuenta-corriente-lista' ||
+        vista === 'cuenta-corriente'
+      "
+      [clienteInicial]="clienteCuentaInicial"
+      (resumenActualizado)="cargarResumen()">
+    </app-cuentas-corrientes>
+  </main>
+</div>
