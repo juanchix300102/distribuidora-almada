@@ -52,6 +52,14 @@ la tablet `http://IP-DE-LA-COMPUTADORA:4200`. Los dos dispositivos deben iniciar
 sesión con el mismo usuario vendedor. Si Windows solicita permiso de red para
 Python o Node.js, habilitar únicamente las redes privadas.
 
+### Aumentos de precios
+
+Desde el panel de productos, el botón `Aumentar precios` permite aplicar un
+porcentaje a todo el catálogo, a un grupo filtrado o a un solo producto. Antes
+de confirmar se muestra una vista previa y el resultado se redondea siempre
+hacia arriba al próximo múltiplo de $10. Cada operación queda en el historial.
+Almada 2 no utiliza precios sugeridos ni recomendados.
+
 Si se inicia solamente para desarrollo sin definir variables, el acceso inicial
 es `admin` / `almada2-dev`. Debe reemplazarse antes de usar el sistema fuera de
 la computadora local.

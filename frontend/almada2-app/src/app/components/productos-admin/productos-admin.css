@@ -131,6 +131,15 @@ textarea:focus {
   min-width: 300px;
 }
 
+.panel-actions .btn-aumentos {
+  background: #171614;
+  white-space: nowrap;
+}
+
+.panel-actions .btn-aumentos:hover {
+  background: #032d73;
+}
+
 .btn-cerrar {
   background: #171614;
   padding: 8px 12px;

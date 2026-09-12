@@ -96,18 +96,19 @@ y lleva consigo para vender. No es mercadería enviada por un proveedor.
 
 ## Actualización de precios
 
-El sistema de precios sugeridos de reventa de Almada 1 se reemplazará por:
+Almada 2 no utiliza precios sugeridos ni recomendados. La herramienta modifica
+únicamente el precio real de venta mediante:
 
 - Aumento general sobre todos los productos.
-- Aumento parcial sobre un grupo de productos.
-- Aumento individual por producto.
-- Buscador por código o nombre.
+- Aumento parcial por proveedor, categoría o productos seleccionados.
+- Aumento individual con buscador por código o nombre.
+- Aumentos exclusivamente por porcentaje.
+- Redondeo obligatorio siempre hacia arriba al próximo múltiplo de $10.
+- Vista previa con precio anterior y precio nuevo antes de confirmar.
+- Historial permanente con el alcance y detalle de cada operación.
 - La herramienta estará dentro del panel inicial, en la ubicación que en Almada 1
   ocupaba la configuración de porcentajes sugeridos.
 - No tendrá una sección independiente en el menú lateral.
-
-Falta definir si el aumento parcial se seleccionará por proveedor, categoría o
-productos marcados, y si se permitirán porcentajes, montos fijos o ambos.
 
 ## Otras secciones
 
@@ -132,8 +133,6 @@ productos marcados, y si se permitirán porcentajes, montos fijos o ambos.
 
 ## Decisiones todavía pendientes
 
-- Criterio del aumento parcial.
-- Tipo de aumento: porcentaje, monto fijo o ambos.
 - Si cada venta puede marcarse como facturada o no facturada.
 - Formas de pago habilitadas.
 - Cantidad inicial de vendedores y datos que se registrarán de cada uno.

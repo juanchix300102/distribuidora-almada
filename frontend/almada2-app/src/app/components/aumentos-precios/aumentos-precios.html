@@ -1,0 +1,460 @@
+<section class="aumentos-modulo">
+  <header class="aumentos-hero">
+    <div>
+      <span class="kicker">Administración de precios</span>
+      <h2>Aumentos de precios</h2>
+      <p>
+        Actualizá el precio real de venta de forma general, parcial o por producto.
+      </p>
+    </div>
+
+    <div class="regla-redondeo">
+      <span class="regla-icono" aria-hidden="true">↗</span>
+      <span>
+        <small>Regla automática</small>
+        <strong>Siempre hacia arriba en $10</strong>
+      </span>
+    </div>
+
+    <button type="button" class="btn-volver-panel" (click)="volverPanel.emit()">
+      Volver al panel
+    </button>
+  </header>
+
+  <div *ngIf="mensajeExito" class="alerta exito">
+    {{ mensajeExito }}
+  </div>
+
+  <div *ngIf="error" class="alerta error-aumento">
+    {{ error }}
+  </div>
+
+  <div class="flujo-grid">
+    <article class="panel configuracion-panel">
+      <div class="paso-titulo">
+        <span>1</span>
+        <div>
+          <h3>Elegí el alcance</h3>
+          <p>Definí qué productos recibirán el aumento.</p>
+        </div>
+      </div>
+
+      <div class="modos">
+        <button
+          type="button"
+          [class.activo]="modo === 'general'"
+          (click)="cambiarModo('general')"
+        >
+          <strong>General</strong>
+          <span>Todo el catálogo</span>
+        </button>
+
+        <button
+          type="button"
+          [class.activo]="modo === 'parcial'"
+          (click)="cambiarModo('parcial')"
+        >
+          <strong>Parcial</strong>
+          <span>Grupo seleccionado</span>
+        </button>
+
+        <button
+          type="button"
+          [class.activo]="modo === 'individual'"
+          (click)="cambiarModo('individual')"
+        >
+          <strong>Por producto</strong>
+          <span>Un artículo</span>
+        </button>
+      </div>
+
+      <div class="porcentaje-bloque">
+        <label for="porcentajeAumento">Porcentaje de aumento</label>
+        <div class="porcentaje-input">
+          <input
+            id="porcentajeAumento"
+            type="number"
+            min="0.01"
+            max="1000"
+            step="0.01"
+            [(ngModel)]="porcentaje"
+            (ngModelChange)="invalidarVistaPrevia()"
+            placeholder="Ej: 10"
+          />
+          <span>%</span>
+        </div>
+        <small>
+          Se modifica solamente el precio real de venta. No existen precios recomendados.
+        </small>
+      </div>
+
+      <div *ngIf="modo === 'general'" class="alcance-resumen">
+        <span class="alcance-icono" aria-hidden="true">▦</span>
+        <div>
+          <strong>{{ productosConPrecio.length }} productos con precio</strong>
+          <p>El aumento se aplicará a todo el catálogo con precio de venta cargado.</p>
+        </div>
+      </div>
+
+      <div *ngIf="modo === 'parcial'" class="seleccion-bloque">
+        <div class="filtros-grid">
+          <label>
+            <span>Proveedor</span>
+            <select
+              [(ngModel)]="proveedorId"
+              (ngModelChange)="cambiarFiltroParcial()"
+            >
+              <option [ngValue]="null">Todos los proveedores</option>
+              <option
+                *ngFor="let proveedor of proveedores"
+                [ngValue]="proveedor.id"
+              >
+                {{ proveedor.nombre }}
+              </option>
+            </select>
+          </label>
+
+          <label>
+            <span>Categoría</span>
+            <select
+              [(ngModel)]="categoria"
+              (ngModelChange)="cambiarFiltroParcial()"
+            >
+              <option value="">Todas las categorías</option>
+              <option *ngFor="let item of categorias" [value]="item">
+                {{ item }}
+              </option>
+            </select>
+          </label>
+        </div>
+
+        <label class="buscador-producto">
+          <span>Buscar dentro de los productos</span>
+          <input
+            type="search"
+            [(ngModel)]="busqueda"
+            (ngModelChange)="invalidarVistaPrevia()"
+            placeholder="Código, nombre, proveedor o categoría..."
+          />
+        </label>
+
+        <div class="seleccion-acciones">
+          <span>
+            {{ seleccionados.size > 0 ? seleccionados.size : cantidadObjetivo }}
+            producto(s) incluidos
+          </span>
+          <div>
+            <button type="button" (click)="seleccionarResultados()">
+              Seleccionar resultados
+            </button>
+            <button
+              type="button"
+              class="secundario"
+              (click)="limpiarSeleccion()"
+              [disabled]="seleccionados.size === 0"
+            >
+              Limpiar
+            </button>
+          </div>
+        </div>
+
+        <p
+          *ngIf="seleccionados.size === 0 && (proveedorId || categoria)"
+          class="ayuda-filtro"
+        >
+          Si no marcás artículos, se incluirán todos los productos del filtro.
+        </p>
+
+        <div class="lista-seleccion" *ngIf="!cargandoOpciones">
+          <label
+            *ngFor="let producto of productosMostrados; trackBy: trackProducto"
+            class="fila-seleccion"
+            [class.marcado]="estaSeleccionado(producto.id)"
+            [class.sin-precio]="!producto.precio_actual"
+          >
+            <input
+              type="checkbox"
+              [checked]="estaSeleccionado(producto.id)"
+              [disabled]="!producto.precio_actual"
+              (change)="alternarProducto(producto)"
+            />
+            <span class="producto-datos">
+              <strong>{{ producto.nombre }}</strong>
+              <small>
+                {{ producto.codigo || 'Sin código' }} ·
+                {{ producto.proveedor || 'Sin proveedor' }}
+              </small>
+            </span>
+            <span class="precio-actual">
+              {{
+                producto.precio_actual
+                  ? '$' + formatearMoneda(producto.precio_actual)
+                  : 'Sin precio'
+              }}
+            </span>
+          </label>
+        </div>
+
+        <p *ngIf="productosFiltrados.length > 200" class="limite-lista">
+          Se muestran los primeros 200 resultados. Podés seleccionarlos todos con el botón superior.
+        </p>
+      </div>
+
+      <div *ngIf="modo === 'individual'" class="seleccion-bloque">
+        <label class="buscador-producto">
+          <span>Buscar producto</span>
+          <input
+            type="search"
+            [(ngModel)]="busqueda"
+            (ngModelChange)="invalidarVistaPrevia()"
+            placeholder="Ingresá el código o nombre..."
+          />
+        </label>
+
+        <div class="lista-seleccion individual" *ngIf="!cargandoOpciones">
+          <label
+            *ngFor="let producto of productosMostrados; trackBy: trackProducto"
+            class="fila-seleccion"
+            [class.marcado]="estaSeleccionado(producto.id)"
+            [class.sin-precio]="!producto.precio_actual"
+          >
+            <input
+              type="radio"
+              name="productoIndividual"
+              [checked]="estaSeleccionado(producto.id)"
+              [disabled]="!producto.precio_actual"
+              (change)="alternarProducto(producto)"
+            />
+            <span class="producto-datos">
+              <strong>{{ producto.nombre }}</strong>
+              <small>
+                {{ producto.codigo || 'Sin código' }} ·
+                {{ producto.proveedor || 'Sin proveedor' }}
+              </small>
+            </span>
+            <span class="precio-actual">
+              {{
+                producto.precio_actual
+                  ? '$' + formatearMoneda(producto.precio_actual)
+                  : 'Sin precio'
+              }}
+            </span>
+          </label>
+        </div>
+
+        <p *ngIf="productosFiltrados.length > 200" class="limite-lista">
+          Escribí más datos en el buscador para encontrar el producto.
+        </p>
+      </div>
+
+      <div *ngIf="cargandoOpciones" class="cargando-linea">
+        Cargando productos...
+      </div>
+
+      <button
+        type="button"
+        class="btn-vista-previa"
+        (click)="generarVistaPrevia()"
+        [disabled]="generandoVista || cargandoOpciones || cantidadObjetivo === 0"
+      >
+        {{ generandoVista ? 'Calculando...' : 'Generar vista previa' }}
+      </button>
+    </article>
+
+    <article class="panel vista-panel">
+      <div class="paso-titulo">
+        <span>2</span>
+        <div>
+          <h3>Revisá antes de confirmar</h3>
+          <p>Ningún precio cambia hasta que presiones “Aplicar aumento”.</p>
+        </div>
+      </div>
+
+      <div *ngIf="!vistaPrevia && !generandoVista" class="vista-vacia">
+        <span aria-hidden="true">$</span>
+        <h4>Esperando la vista previa</h4>
+        <p>Elegí el alcance y el porcentaje para ver todos los cambios.</p>
+      </div>
+
+      <div *ngIf="generandoVista" class="vista-cargando">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+
+      <div *ngIf="vistaPrevia && !generandoVista" class="vista-contenido">
+        <div class="vista-resumen">
+          <div>
+            <span>Tipo</span>
+            <strong>{{ nombreModo(vistaPrevia.modo) }}</strong>
+          </div>
+          <div>
+            <span>Aumento</span>
+            <strong>{{ vistaPrevia.porcentaje }}%</strong>
+          </div>
+          <div>
+            <span>Productos</span>
+            <strong>{{ vistaPrevia.cantidad_productos }}</strong>
+          </div>
+        </div>
+
+        <div class="criterio">
+          <span>Alcance:</span>
+          <strong>{{ vistaPrevia.criterio }}</strong>
+        </div>
+
+        <div class="tabla-vista-wrap">
+          <table class="tabla-vista">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Precio anterior</th>
+                <th>Precio nuevo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let producto of productosVistaPrevia; trackBy: trackProducto"
+              >
+                <td>
+                  <strong>{{ producto.nombre }}</strong>
+                  <small>{{ producto.codigo || 'Sin código' }}</small>
+                </td>
+                <td>
+                  <div *ngFor="let precio of preciosMostrados(producto)" class="precio-linea">
+                    <small>{{ precio.variante }}</small>
+                    <span>${{ formatearMoneda(precio.precio_anterior) }}</span>
+                  </div>
+                  <small *ngIf="producto.precios.length > 5">
+                    +{{ producto.precios.length - 5 }} precio(s)
+                  </small>
+                </td>
+                <td>
+                  <div *ngFor="let precio of preciosMostrados(producto)" class="precio-linea nuevo">
+                    <small>{{ precio.variante }}</small>
+                    <strong>${{ formatearMoneda(precio.precio_nuevo) }}</strong>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p *ngIf="vistaPrevia.productos.length > 250" class="limite-lista">
+          La vista resume 250 productos de {{ vistaPrevia.productos.length }}. Todos serán actualizados.
+        </p>
+
+        <p *ngIf="vistaPrevia.omitidos_sin_precio > 0" class="aviso-omitidos">
+          {{ vistaPrevia.omitidos_sin_precio }} producto(s) sin precio fueron omitidos.
+        </p>
+
+        <button
+          type="button"
+          class="btn-aplicar"
+          (click)="aplicarAumento()"
+          [disabled]="aplicando"
+        >
+          {{ aplicando ? 'Aplicando aumento...' : 'Aplicar aumento' }}
+        </button>
+      </div>
+    </article>
+  </div>
+
+  <article class="panel historial-panel">
+    <div class="historial-header">
+      <div>
+        <span class="kicker">Registro de cambios</span>
+        <h3>Historial de aumentos</h3>
+        <p>Cada operación conserva el porcentaje, el alcance y los precios anteriores.</p>
+      </div>
+      <button type="button" (click)="cargarHistorial()" [disabled]="cargandoHistorial">
+        {{ cargandoHistorial ? 'Actualizando...' : 'Actualizar' }}
+      </button>
+    </div>
+
+    <div *ngIf="!cargandoHistorial && historial.length === 0" class="historial-vacio">
+      Todavía no se realizaron aumentos de precios.
+    </div>
+
+    <div *ngIf="historial.length > 0" class="historial-tabla-wrap">
+      <table class="historial-tabla">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Porcentaje</th>
+            <th>Productos</th>
+            <th>Alcance</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let aumento of historial; trackBy: trackHistorial">
+            <td>{{ formatearFecha(aumento.fecha) }}</td>
+            <td><span class="badge-modo">{{ nombreModo(aumento.modo) }}</span></td>
+            <td><strong>{{ aumento.porcentaje }}%</strong></td>
+            <td>{{ aumento.cantidad_productos }}</td>
+            <td>{{ aumento.criterio }}</td>
+            <td>
+              <button type="button" (click)="abrirDetalleHistorial(aumento)">
+                Ver detalle
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </article>
+
+  <div *ngIf="cargandoDetalle" class="modal-fondo">
+    <div class="modal-cargando">Cargando detalle...</div>
+  </div>
+
+  <div
+    *ngIf="detalleHistorial"
+    class="modal-fondo"
+    role="presentation"
+    (click)="cerrarDetalleHistorial()"
+  >
+    <article
+      class="detalle-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Detalle del aumento"
+      (click)="$event.stopPropagation()"
+    >
+      <header>
+        <div>
+          <span class="kicker">Aumento #{{ detalleHistorial.id }}</span>
+          <h3>{{ detalleHistorial.porcentaje }}% · {{ nombreModo(detalleHistorial.modo) }}</h3>
+          <p>{{ formatearFecha(detalleHistorial.fecha) }} · {{ detalleHistorial.criterio }}</p>
+        </div>
+        <button type="button" aria-label="Cerrar" (click)="cerrarDetalleHistorial()">✕</button>
+      </header>
+
+      <div class="detalle-tabla-wrap">
+        <table class="detalle-tabla">
+          <thead>
+            <tr>
+              <th>Producto / variante</th>
+              <th>Código</th>
+              <th>Anterior</th>
+              <th>Nuevo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let detalle of detalleHistorial.detalles">
+              <td>
+                <strong>{{ detalle.producto }}</strong>
+                <small>{{ detalle.variante }}</small>
+              </td>
+              <td>{{ detalle.codigo || '-' }}</td>
+              <td>${{ formatearMoneda(detalle.precio_anterior) }}</td>
+              <td><strong>${{ formatearMoneda(detalle.precio_nuevo) }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </div>
+</section>

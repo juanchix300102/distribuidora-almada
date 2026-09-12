@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 
 import { ApiService } from './services/api.service';
+import { AumentosPreciosComponent } from './components/aumentos-precios/aumentos-precios';
 import { AuthComponent } from './components/auth/auth';
 import { CatalogoVisualComponent } from './components/catalogo-visual/catalogo-visual';
 import { ClientesComponent } from './components/clientes/clientes';
@@ -21,6 +22,7 @@ import { VentaVendedorComponent } from './components/venta-vendedor/venta-vended
   standalone: true,
   imports: [
     CommonModule,
+    AumentosPreciosComponent,
     AuthComponent,
     CatalogoVisualComponent,
     ClientesComponent,

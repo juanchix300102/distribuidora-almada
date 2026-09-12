@@ -1,0 +1,45 @@
+ALMADA 2 - ACTUALIZACION FUNCIONAL 04
+Aumentos porcentuales de precios
+
+REQUISITO
+
+- Tener instalada la actualizacion 03 del catalogo visual.
+- Tener guardado el commit "Catalogo visual terminado".
+
+INSTALACION
+
+1. Detener backend y frontend con Ctrl + C.
+2. Descomprimir este ZIP sobre la carpeta raiz de Almada 2.
+3. Aceptar el reemplazo de los archivos existentes.
+4. No borrar la carpeta backend\data: la base actual se conserva.
+5. Reiniciar el backend; las tablas nuevas del historial se crean solas.
+6. Reiniciar Angular. No hace falta volver a instalar dependencias.
+
+ACCESO
+
+- Ingresar como administrador.
+- Abrir el Panel.
+- Presionar "Aumentar precios" junto al buscador de productos.
+
+FUNCIONAMIENTO
+
+- General: aplica el porcentaje a todo producto con precio cargado.
+- Parcial: permite filtrar por proveedor o categoria y marcar productos.
+- Por producto: permite buscar y elegir un solo articulo.
+- Siempre muestra una vista previa antes de confirmar.
+- El precio resultante se redondea hacia arriba al proximo multiplo de $10.
+- Cada operacion queda guardada en el historial con precios anteriores y nuevos.
+- Almada 2 no utiliza precios sugeridos ni recomendados.
+
+PRUEBA RAPIDA
+
+1. Crear o elegir un producto con precio $101.
+2. Seleccionar aumento por producto del 7%.
+3. Generar la vista previa: el nuevo precio debe ser $110.
+4. Confirmar y comprobar el precio desde la pantalla de venta.
+5. Abrir el historial y revisar el detalle.
+
+AL TERMINAR
+
+  git add .
+  git commit -m "Aumentos porcentuales de precios"

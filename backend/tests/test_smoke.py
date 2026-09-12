@@ -148,6 +148,140 @@ class Almada2SmokeTest(unittest.TestCase):
         self.assertEqual(response.get_json()["productos_creados"], 1)
 
 
+    def test_price_increases_round_up_to_ten_and_keep_history(self):
+        provider = self.client.post(
+            "/api/proveedores",
+            json={"nombre": "Proveedor aumentos"}
+        )
+        self.assertEqual(provider.status_code, 201)
+        provider_id = provider.get_json()["id"]
+
+        product_with_variants = self.client.post(
+            f"/api/proveedores/{provider_id}/productos",
+            json={
+                "nombre": "Producto aumento con variantes",
+                "categoria": "Categoría aumentos",
+                "variantes": [
+                    {
+                        "nombre_variante": "Medida A",
+                        "codigo": "AUM-A",
+                        "precio_venta": 101,
+                        "stock": 1
+                    },
+                    {
+                        "nombre_variante": "Medida B",
+                        "codigo": "AUM-B",
+                        "precio_venta": 205,
+                        "stock": 1
+                    }
+                ]
+            }
+        )
+        self.assertEqual(product_with_variants.status_code, 201)
+        product_id = product_with_variants.get_json()["producto_id"]
+
+        single_product = self.client.post(
+            f"/api/proveedores/{provider_id}/productos",
+            json={
+                "nombre": "Producto aumento individual",
+                "codigo": "AUM-IND",
+                "categoria": "Categoría aumentos",
+                "precio_venta": 333,
+                "stock": 1
+            }
+        )
+        self.assertEqual(single_product.status_code, 201)
+        single_product_id = single_product.get_json()["producto_id"]
+
+        options = self.client.get("/api/aumentos-precios/opciones")
+        self.assertEqual(options.status_code, 200)
+        option = next(
+            item for item in options.get_json()["productos"]
+            if item["id"] == product_id
+        )
+        self.assertEqual(option["precio_actual"], 101)
+        self.assertNotIn("precio_reventa", option)
+
+        preview = self.client.post(
+            "/api/aumentos-precios/vista-previa",
+            json={
+                "modo": "individual",
+                "porcentaje": 7,
+                "producto_ids": [product_id]
+            }
+        )
+        self.assertEqual(preview.status_code, 200)
+        preview_data = preview.get_json()
+        self.assertEqual(preview_data["cantidad_productos"], 1)
+        self.assertEqual(preview_data["cantidad_precios"], 2)
+        self.assertEqual(
+            [item["precio_nuevo"] for item in preview_data["productos"][0]["precios"]],
+            [110, 220]
+        )
+
+        applied = self.client.post(
+            "/api/aumentos-precios",
+            json={
+                "modo": "individual",
+                "porcentaje": 7,
+                "producto_ids": [product_id]
+            }
+        )
+        self.assertEqual(applied.status_code, 201)
+        increase_id = applied.get_json()["aumento_id"]
+
+        products = self.client.get("/api/productos").get_json()
+        updated_product = next(
+            item for item in products if item["id"] == product_id
+        )
+        self.assertEqual(updated_product["precio_venta"], 110)
+        self.assertEqual(
+            [item["precio_venta"] for item in updated_product["variantes"]],
+            [110, 220]
+        )
+
+        partial = self.client.post(
+            "/api/aumentos-precios",
+            json={
+                "modo": "parcial",
+                "porcentaje": 10,
+                "proveedor_id": provider_id,
+                "producto_ids": [single_product_id]
+            }
+        )
+        self.assertEqual(partial.status_code, 201)
+
+        products = self.client.get("/api/productos").get_json()
+        updated_single = next(
+            item for item in products if item["id"] == single_product_id
+        )
+        self.assertEqual(updated_single["precio_venta"], 370)
+
+        history = self.client.get("/api/aumentos-precios/historial")
+        self.assertEqual(history.status_code, 200)
+        self.assertGreaterEqual(len(history.get_json()), 2)
+
+        detail = self.client.get(
+            f"/api/aumentos-precios/historial/{increase_id}"
+        )
+        self.assertEqual(detail.status_code, 200)
+        self.assertEqual(len(detail.get_json()["detalles"]), 2)
+        self.assertNotIn("precio_reventa", detail.get_json()["detalles"][0])
+
+        general_preview = self.client.post(
+            "/api/aumentos-precios/vista-previa",
+            json={"modo": "general", "porcentaje": 5}
+        )
+        self.assertEqual(general_preview.status_code, 200)
+        self.assertEqual(general_preview.get_json()["modo"], "general")
+
+        invalid = self.client.post(
+            "/api/aumentos-precios/vista-previa",
+            json={"modo": "general", "porcentaje": 0}
+        )
+        self.assertEqual(invalid.status_code, 400)
+
+
     def test_vendor_stock_trip_and_sale_flow(self):
         provider = self.client.post(
             "/api/proveedores",

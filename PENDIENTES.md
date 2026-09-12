@@ -41,7 +41,10 @@
 
 ### Etapa 4 — Administración
 
-- [ ] Reemplazar precios de reventa por aumentos generales, parciales e individuales.
+- [x] Crear aumentos porcentuales generales, parciales e individuales.
+- [x] Aplicar redondeo siempre hacia arriba al próximo múltiplo de $10.
+- [x] Incorporar vista previa e historial de aumentos.
+- [ ] Aprobar visual y funcionalmente el módulo de aumentos.
 - [ ] Crear sección Gastos.
 - [ ] Desarrollar Saldos.
 - [ ] Crear Reportes y gráficos.

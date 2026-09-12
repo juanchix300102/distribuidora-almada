@@ -106,7 +106,6 @@
 
       <div class="nav-separador">Próximamente</div>
 
-      <a class="disabled">Aumentos de precios</a>
       <a class="disabled">Gastos</a>
       <a class="disabled">Saldos</a>
       <a class="disabled">Reportes</a>
@@ -159,6 +158,8 @@
                 ? 'Panel general'
                 : vista === 'proveedores'
                   ? 'Proveedores y precios'
+                  : vista === 'aumentos-precios'
+                    ? 'Aumentos de precios'
                   : vista === 'clientes'
                     ? 'Clientes'
                     : vista === 'cuenta-corriente-lista'
@@ -177,6 +178,8 @@
                 ? 'Una vista clara del movimiento comercial.'
                 : vista === 'proveedores'
                   ? 'Proveedores y costos de los productos.'
+                  : vista === 'aumentos-precios'
+                    ? 'Actualización porcentual con vista previa y registro de cambios.'
                   : vista === 'clientes'
                     ? 'Registro interno y datos comerciales de clientes.'
                     : vista === 'cuenta-corriente-lista'
@@ -218,6 +221,7 @@
       <app-productos-admin
         *ngIf="rolActual === 'admin' && vista === 'panel'"
         [resumen]="resumen"
+        (abrirAumentos)="cambiarVista('aumentos-precios')"
         (resumenActualizado)="cargarResumen()">
       </app-productos-admin>
 
@@ -225,6 +229,12 @@
         *ngIf="rolActual === 'admin' && vista === 'proveedores'"
         (resumenActualizado)="cargarResumen()">
       </app-proveedores>
+
+      <app-aumentos-precios
+        *ngIf="rolActual === 'admin' && vista === 'aumentos-precios'"
+        (volverPanel)="cambiarVista('panel')"
+        (preciosActualizados)="cargarResumen()">
+      </app-aumentos-precios>
 
       <app-clientes
         *ngIf="rolActual === 'admin' && vista === 'clientes'"
