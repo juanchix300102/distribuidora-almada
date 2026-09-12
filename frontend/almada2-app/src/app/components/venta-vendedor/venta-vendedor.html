@@ -1,0 +1,183 @@
+<div class="vendedor-dashboard">
+  <section class="bienvenida">
+    <div>
+      <span class="kicker">Venta ambulante</span>
+      <h2>{{ vendedorNombre || 'Mi jornada' }}</h2>
+      <p>Vendé únicamente la mercadería que tenés asignada en stock en viaje.</p>
+    </div>
+    <div class="metricas">
+      <article>
+        <span>Productos</span>
+        <strong>{{ stockViaje.length }}</strong>
+      </article>
+      <article>
+        <span>Unidades</span>
+        <strong>{{ totalUnidadesViaje }}</strong>
+      </article>
+    </div>
+  </section>
+
+  <section *ngIf="error" class="alerta error">{{ error }}</section>
+  <section *ngIf="mensaje" class="alerta exito">{{ mensaje }}</section>
+
+  <div class="grid-principal">
+    <section class="panel stock-panel">
+      <div class="panel-header">
+        <div>
+          <span class="kicker">Mercadería disponible</span>
+          <h3>Mi stock en viaje</h3>
+        </div>
+      </div>
+
+      <input
+        class="buscador"
+        [(ngModel)]="filtro"
+        name="filtroStock"
+        placeholder="Buscar por código o producto"
+      />
+
+      <div *ngIf="stockFiltrado.length === 0" class="sin-datos">
+        No tenés mercadería disponible en viaje.
+      </div>
+
+      <div class="productos" *ngIf="stockFiltrado.length > 0">
+        <article *ngFor="let item of stockFiltrado" class="producto-card">
+          <div class="producto-meta">
+            <span>{{ item.codigo || 'S/C' }}</span>
+            <strong>{{ item.nombre }}</strong>
+            <small>{{ item.proveedor || 'Sin proveedor' }}</small>
+          </div>
+
+          <div class="producto-datos">
+            <div>
+              <span>Disponible</span>
+              <strong>{{ item.cantidad }}</strong>
+            </div>
+            <div>
+              <span>Precio</span>
+              <strong>${{ formatearMoneda(item.precio_venta) }}</strong>
+            </div>
+          </div>
+
+          <div class="agregar-control">
+            <input
+              type="number"
+              min="1"
+              [max]="item.cantidad"
+              [(ngModel)]="cantidades[item.producto_id]"
+              [name]="'cantidad-' + item.producto_id"
+              placeholder="1"
+            />
+            <button type="button" (click)="agregar(item)">Agregar</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel venta-panel">
+      <div class="panel-header">
+        <div>
+          <span class="kicker">Venta actual</span>
+          <h3>Detalle de venta</h3>
+        </div>
+        <span class="contador">{{ carrito.length }} ítems</span>
+      </div>
+
+      <div *ngIf="carrito.length === 0" class="sin-datos">
+        Agregá productos desde tu stock en viaje.
+      </div>
+
+      <div class="carrito" *ngIf="carrito.length > 0">
+        <article *ngFor="let item of carrito">
+          <div>
+            <strong>{{ item.nombre }}</strong>
+            <span>{{ item.codigo || 'S/C' }} · ${{ formatearMoneda(item.precio_unitario) }} c/u</span>
+          </div>
+          <input
+            type="number"
+            min="1"
+            [max]="item.stock_disponible"
+            [(ngModel)]="item.cantidad"
+            [name]="'carrito-' + item.producto_id"
+            (change)="cambiarCantidad(item)"
+          />
+          <strong>${{ formatearMoneda(item.cantidad * item.precio_unitario) }}</strong>
+          <button type="button" class="quitar" (click)="quitar(item.producto_id)">✕</button>
+        </article>
+      </div>
+
+      <div class="venta-form" *ngIf="carrito.length > 0">
+        <label>
+          Cliente
+          <select [(ngModel)]="ventaForm.cliente_id" name="clienteVenta">
+            <option value="">Seleccionar cliente</option>
+            <option *ngFor="let cliente of clientes" [value]="cliente.id">
+              {{ cliente.numero_cliente }} · {{ cliente.nombre }}
+            </option>
+          </select>
+        </label>
+
+        <label>
+          Forma de pago
+          <select [(ngModel)]="ventaForm.forma_pago" name="formaPago">
+            <option>Efectivo</option>
+            <option>Transferencia</option>
+            <option>Cuenta corriente</option>
+          </select>
+        </label>
+
+        <label class="observaciones">
+          Observaciones
+          <input [(ngModel)]="ventaForm.observaciones" name="observacionesVenta" placeholder="Opcional" />
+        </label>
+      </div>
+
+      <div class="total" *ngIf="carrito.length > 0">
+        <span>Total</span>
+        <strong>${{ formatearMoneda(totalVenta) }}</strong>
+      </div>
+
+      <button
+        *ngIf="carrito.length > 0"
+        type="button"
+        class="confirmar"
+        [disabled]="enviando"
+        (click)="confirmarVenta()"
+      >
+        {{ enviando ? 'Registrando...' : 'Confirmar venta' }}
+      </button>
+    </section>
+  </div>
+
+  <section class="panel historial" *ngIf="ventas.length > 0">
+    <div class="panel-header">
+      <div>
+        <span class="kicker">Actividad reciente</span>
+        <h3>Mis últimas ventas</h3>
+      </div>
+    </div>
+
+    <div class="tabla-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Venta</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Pago</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let venta of ventas.slice(0, 15)">
+            <td>#{{ venta.id }}</td>
+            <td>{{ venta.fecha }}</td>
+            <td>{{ venta.cliente || 'Consumidor final' }}</td>
+            <td>{{ venta.forma_pago }}</td>
+            <td><strong>${{ formatearMoneda(venta.total) }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

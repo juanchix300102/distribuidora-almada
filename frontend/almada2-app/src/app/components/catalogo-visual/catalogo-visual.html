@@ -1,0 +1,239 @@
+<section class="catalogo">
+  <header class="catalogo-header">
+    <div class="marca">
+      <div class="marca-texto">
+        <span>Distribuidora Almada</span>
+        <strong>Catálogo visual de productos</strong>
+      </div>
+    </div>
+
+    <div class="header-acciones">
+      <label *ngIf="modoAdmin" class="selector-vendedor">
+        <span>Vista del vendedor</span>
+        <select
+          [ngModel]="vendedorSeleccionadoId"
+          (ngModelChange)="seleccionarVendedor($event)"
+          name="vendedorCatalogo"
+        >
+          <option *ngFor="let vendedor of vendedores" [ngValue]="vendedor.id">
+            {{ vendedor.nombre }}
+          </option>
+        </select>
+      </label>
+
+      <div class="sincronizacion" *ngIf="vendedorSeleccionadoId">
+        <span class="pulso" [class.actualizando]="actualizando"></span>
+        <span>
+          <strong>{{ actualizando ? 'Actualizando...' : 'Stock sincronizado' }}</strong>
+          <small>Última revisión: {{ horaActualizacion() }}</small>
+        </span>
+      </div>
+
+      <button type="button" class="btn-volver" (click)="cerrarCatalogo.emit()">
+        Volver al sistema
+      </button>
+    </div>
+  </header>
+
+  <main class="catalogo-contenido">
+    <section class="presentacion presentacion-compacta">
+      <div>
+        <span class="kicker">Catálogo de productos</span>
+        <h1>Nuestros productos</h1>
+      </div>
+
+      <div class="presentacion-resumen" *ngIf="vendedorSeleccionadoId">
+        <span>Catálogo de</span>
+        <strong>{{ vendedorSeleccionadoNombre || 'Vendedor' }}</strong>
+        <small>{{ disponibles }} productos disponibles ahora</small>
+      </div>
+    </section>
+
+    <section *ngIf="error" class="alerta-error">
+      {{ error }}
+      <button
+        *ngIf="vendedorSeleccionadoId"
+        type="button"
+        (click)="cargarCatalogo(true)"
+      >
+        Reintentar
+      </button>
+    </section>
+
+    <section *ngIf="cargando" class="cargando-grid" aria-label="Cargando catálogo">
+      <article *ngFor="let item of [1, 2, 3, 4, 5, 6, 7, 8]"></article>
+    </section>
+
+    <section
+      *ngIf="!cargando && vendedorSeleccionadoId && productosVisibles.length > 0"
+      class="productos-grid"
+    >
+      <article
+        *ngFor="let producto of productosVisibles; trackBy: trackProducto"
+        class="producto"
+        [class.sin-stock]="!producto.disponible"
+        role="button"
+        tabindex="0"
+        (click)="abrirProducto(producto)"
+        (keydown)="manejarTecla($event, producto)"
+      >
+        <div class="producto-imagen">
+          <img
+            *ngIf="obtenerImagenProducto(producto) as imagen; else sinImagen"
+            [src]="imagen"
+            [alt]="producto.nombre"
+            loading="lazy"
+            (error)="marcarImagenFallida(producto.id)"
+          />
+
+          <ng-template #sinImagen>
+            <div class="imagen-vacia">
+              <img
+                class="imagen-vacia-logo"
+                src="logo-distribuidora-almada.jpeg"
+                alt="Distribuidora Almada"
+              />
+              <small>Imagen no disponible</small>
+            </div>
+          </ng-template>
+
+          <span
+            class="estado-stock"
+            [class.disponible]="producto.disponible"
+          >
+            {{ producto.disponible ? 'Disponible' : 'Sin stock' }}
+          </span>
+        </div>
+
+        <div class="producto-info">
+          <div class="producto-meta">
+            <span class="codigo">{{ codigoVisible(producto) }}</span>
+            <span class="categoria">{{ producto.categoria || 'Sin categoría' }}</span>
+          </div>
+
+          <h2>{{ producto.nombre }}</h2>
+
+          <div class="medidas" *ngIf="producto.variantes?.length > 0">
+            <span *ngFor="let variante of producto.variantes.slice(0, 3)">
+              {{ variante.nombre_variante }}
+            </span>
+            <span *ngIf="producto.variantes.length > 3">
+              +{{ producto.variantes.length - 3 }} más
+            </span>
+          </div>
+
+          <span class="ver-detalle">Ver descripción y medidas →</span>
+        </div>
+      </article>
+    </section>
+
+    <section
+      *ngIf="!cargando && vendedorSeleccionadoId && productosVisibles.length === 0 && !error"
+      class="estado-vacio"
+    >
+      <img
+        class="estado-vacio-logo"
+        src="logo-distribuidora-almada.jpeg"
+        alt="Distribuidora Almada"
+      />
+      <h2>Todavía no hay productos para mostrar</h2>
+      <p>Los productos cargados aparecerán aquí automáticamente.</p>
+    </section>
+  </main>
+
+  <footer class="catalogo-footer">
+    <strong>Distribuidora Almada</strong>
+    <span>Catálogo visual para venta ambulante · Sin compra online</span>
+  </footer>
+
+  <div
+    *ngIf="productoAbierto"
+    class="modal-fondo"
+    role="presentation"
+    (click)="cerrarProducto()"
+  >
+    <article
+      class="producto-modal"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="productoAbierto.nombre"
+      (click)="$event.stopPropagation()"
+    >
+      <button
+        type="button"
+        class="modal-cerrar"
+        aria-label="Cerrar detalle"
+        (click)="cerrarProducto()"
+      >
+        ✕
+      </button>
+
+      <div class="modal-imagen">
+        <img
+          *ngIf="obtenerImagenProducto(productoAbierto) as imagenDetalle; else sinImagenDetalle"
+          [src]="imagenDetalle"
+          [alt]="productoAbierto.nombre"
+          (error)="marcarImagenFallida(productoAbierto.id)"
+        />
+
+        <ng-template #sinImagenDetalle>
+          <div class="imagen-vacia grande">
+            <img
+              class="imagen-vacia-logo"
+              src="logo-distribuidora-almada.jpeg"
+              alt="Distribuidora Almada"
+            />
+            <small>Imagen no disponible</small>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="modal-contenido">
+        <div class="modal-etiquetas">
+          <span class="codigo">{{ codigoVisible(productoAbierto) }}</span>
+          <span
+            class="estado-stock"
+            [class.disponible]="productoAbierto.disponible"
+          >
+            {{ productoAbierto.disponible ? 'Disponible' : 'Sin stock' }}
+          </span>
+        </div>
+
+        <span class="modal-categoria">
+          {{ productoAbierto.categoria || 'Sin categoría' }}
+        </span>
+        <h2>{{ productoAbierto.nombre }}</h2>
+        <p class="descripcion">
+          {{ productoAbierto.descripcion || 'Este producto no tiene una descripción cargada.' }}
+        </p>
+
+        <section class="variantes-detalle">
+          <div>
+            <span class="kicker">Medidas y modelos</span>
+            <h3>Opciones del producto</h3>
+          </div>
+
+          <div *ngIf="productoAbierto.variantes?.length > 0" class="variantes-lista">
+            <article *ngFor="let variante of productoAbierto.variantes">
+              <strong>{{ variante.nombre_variante || 'Presentación única' }}</strong>
+              <span>{{ variante.codigo || codigoVisible(productoAbierto) }}</span>
+            </article>
+          </div>
+
+          <div *ngIf="!productoAbierto.variantes?.length" class="variante-unica">
+            <strong>Presentación única</strong>
+            <span>{{ codigoVisible(productoAbierto) }}</span>
+          </div>
+        </section>
+
+        <p class="aviso-stock" [class.sin-stock]="!productoAbierto.disponible">
+          {{
+            productoAbierto.disponible
+              ? 'Este producto está disponible en el stock del vendedor.'
+              : 'Este producto se encuentra sin stock durante esta visita.'
+          }}
+        </p>
+      </div>
+    </article>
+  </div>
+</section>

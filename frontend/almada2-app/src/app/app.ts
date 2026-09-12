@@ -8,10 +8,13 @@ import {
 
 import { ApiService } from './services/api.service';
 import { AuthComponent } from './components/auth/auth';
+import { CatalogoVisualComponent } from './components/catalogo-visual/catalogo-visual';
 import { ClientesComponent } from './components/clientes/clientes';
 import { CuentasCorrientesComponent } from './components/cuentas corrientes/cuentas-corrientes';
 import { ProductosAdminComponent } from './components/productos-admin/productos-admin';
 import { ProveedoresComponent } from './components/proveedores/proveedores';
+import { VendedoresComponent } from './components/vendedores/vendedores';
+import { VentaVendedorComponent } from './components/venta-vendedor/venta-vendedor';
 
 @Component({
   selector: 'app-root',
@@ -19,10 +22,13 @@ import { ProveedoresComponent } from './components/proveedores/proveedores';
   imports: [
     CommonModule,
     AuthComponent,
+    CatalogoVisualComponent,
     ClientesComponent,
     CuentasCorrientesComponent,
     ProductosAdminComponent,
-    ProveedoresComponent
+    ProveedoresComponent,
+    VendedoresComponent,
+    VentaVendedorComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'
@@ -37,14 +43,17 @@ export class App implements OnInit {
   error = '';
   resumen: any = null;
   clienteCuentaInicial: any = null;
+  usuarioId: number | null = null;
+  vendedorId: number | null = null;
+  nombreActual = '';
 
   ngOnInit(): void {
     this.vista = 'login';
   }
 
   procesarLogin(respuesta: any): void {
-    if (respuesta?.rol !== 'admin') {
-      this.error = 'Este perfil todavía no está habilitado.';
+    if (!['admin', 'vendedor'].includes(respuesta?.rol)) {
+      this.error = 'Este perfil no está habilitado.';
       this.autenticado = false;
       this.vista = 'login';
       this.cdr.detectChanges();
@@ -53,9 +62,20 @@ export class App implements OnInit {
 
     this.autenticado = true;
     this.rolActual = respuesta.rol;
-    this.vista = 'panel';
+    this.usuarioId = Number(respuesta.usuario_id || 0) || null;
+    this.vendedorId = Number(respuesta.vendedor_id || 0) || null;
+    this.nombreActual =
+      respuesta.nombre ||
+      respuesta.usuario ||
+      (respuesta.rol === 'admin' ? 'Administrador' : 'Vendedor');
+
+    this.vista = respuesta.rol === 'admin' ? 'panel' : 'venta-vendedor';
     this.error = '';
-    this.cargarResumen();
+
+    if (respuesta.rol === 'admin') {
+      this.cargarResumen();
+    }
+
     this.cdr.detectChanges();
   }
 
@@ -66,12 +86,24 @@ export class App implements OnInit {
     this.error = '';
     this.resumen = null;
     this.clienteCuentaInicial = null;
+    this.usuarioId = null;
+    this.vendedorId = null;
+    this.nombreActual = '';
     this.cdr.detectChanges();
   }
 
   cambiarVista(vista: string): void {
     if (!this.autenticado) {
       this.vista = 'login';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (
+      this.rolActual === 'vendedor' &&
+      !['venta-vendedor', 'catalogo-visual'].includes(vista)
+    ) {
+      this.vista = 'venta-vendedor';
       this.cdr.detectChanges();
       return;
     }
@@ -85,6 +117,17 @@ export class App implements OnInit {
 
     if (vista === 'cuenta-corriente-lista') {
       this.clienteCuentaInicial = null;
+      this.cargarResumen();
+    }
+
+    this.cdr.detectChanges();
+  }
+
+  cerrarCatalogoVisual(): void {
+    this.vista =
+      this.rolActual === 'admin' ? 'panel' : 'venta-vendedor';
+
+    if (this.rolActual === 'admin') {
       this.cargarResumen();
     }
 

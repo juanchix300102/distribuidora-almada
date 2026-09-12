@@ -1,42 +1,69 @@
 <section class="login">
-  <div class="login-card">
-    <div class="login-logo-placeholder" aria-hidden="true">
-      A2
+  <div class="login-shell">
+    <div class="login-identidad">
+      <div class="login-logo">
+        <img
+          src="logo-distribuidora-almada.jpeg"
+          alt="Distribuidora Almada"
+        />
+      </div>
+
+      <div class="login-presentacion">
+        <span class="login-kicker">Sistema de gestión comercial</span>
+        <h1>Tu operación diaria, clara y ordenada.</h1>
+        <p>
+          Productos, clientes, stock y cuentas en un mismo lugar.
+        </p>
+      </div>
+
+      <div class="login-seguridad">
+        <span aria-hidden="true"></span>
+        Acceso exclusivo para personal autorizado
+      </div>
     </div>
 
-    <h1>Almada 2</h1>
-    <p>Acceso exclusivo para administración y vendedores autorizados.</p>
+    <div class="login-card">
+      <span class="login-etiqueta">Acceso interno</span>
+      <h2>Bienvenido</h2>
+      <p class="login-subtitulo">
+        Ingresá tus datos para acceder al sistema.
+      </p>
 
-    <form (ngSubmit)="iniciarSesion()">
-      <input
-        type="text"
-        placeholder="Usuario"
-        [(ngModel)]="loginForm.usuario"
-        name="usuario"
-        autocomplete="username"
-        required
-      />
+      <form (ngSubmit)="iniciarSesion()">
+        <label for="usuario">Usuario</label>
+        <input
+          id="usuario"
+          type="text"
+          placeholder="Ingresá tu usuario"
+          [(ngModel)]="loginForm.usuario"
+          name="usuario"
+          autocomplete="username"
+          required
+        />
 
-      <input
-        type="password"
-        placeholder="Contraseña"
-        [(ngModel)]="loginForm.contrasena"
-        name="contrasena"
-        autocomplete="current-password"
-        required
-      />
+        <label for="contrasena">Contraseña</label>
+        <input
+          id="contrasena"
+          type="password"
+          placeholder="Ingresá tu contraseña"
+          [(ngModel)]="loginForm.contrasena"
+          name="contrasena"
+          autocomplete="current-password"
+          required
+        />
 
-      <button type="submit" [disabled]="ingresando">
-        {{ ingresando ? 'Ingresando...' : 'Ingresar' }}
-      </button>
-    </form>
+        <button type="submit" [disabled]="ingresando">
+          {{ ingresando ? 'Ingresando...' : 'Ingresar al sistema' }}
+        </button>
+      </form>
 
-    <p *ngIf="loginError" class="login-error">
-      {{ loginError }}
-    </p>
+      <p *ngIf="loginError" class="login-error">
+        {{ loginError }}
+      </p>
 
-    <p class="login-ayuda">
-      Los clientes se cargan únicamente desde el panel interno.
-    </p>
+      <p class="login-ayuda">
+        Los clientes se administran únicamente desde el panel interno.
+      </p>
+    </div>
   </div>
 </section>

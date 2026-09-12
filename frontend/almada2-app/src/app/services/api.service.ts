@@ -6,9 +6,18 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class ApiService {
-  private apiUrl = 'http://127.0.0.1:5000/api';
+  private apiUrl = this.construirApiUrl();
 
   constructor(private http: HttpClient) {}
+
+  private construirApiUrl(): string {
+    const host =
+      typeof window !== 'undefined' && window.location.hostname
+        ? window.location.hostname
+        : '127.0.0.1';
+
+    return `http://${host}:5000/api`;
+  }
 
   login(datos: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/login`, datos);
@@ -138,6 +147,77 @@ export class ApiService {
     return this.http.post<any>(
       `${this.apiUrl}/importar-catalogo`,
       formData
+    );
+  }
+
+  obtenerVendedores(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/vendedores`);
+  }
+
+  crearVendedor(datos: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/vendedores`, datos);
+  }
+
+  actualizarVendedor(id: number, datos: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/vendedores/${id}`, datos);
+  }
+
+  desactivarVendedor(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/vendedores/${id}`);
+  }
+
+  obtenerVendedorPorUsuario(usuarioId: number): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/vendedores/por-usuario/${usuarioId}`
+    );
+  }
+
+  obtenerStockViaje(vendedorId: number): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/vendedores/${vendedorId}/stock-viaje`
+    );
+  }
+
+  obtenerCatalogoVisual(vendedorId: number): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/vendedores/${vendedorId}/catalogo-visual`
+    );
+  }
+
+  asignarStockViaje(vendedorId: number, datos: any): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/vendedores/${vendedorId}/stock-viaje/asignar`,
+      datos
+    );
+  }
+
+  devolverStockViaje(vendedorId: number, datos: any): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/vendedores/${vendedorId}/stock-viaje/devolver`,
+      datos
+    );
+  }
+
+  obtenerMovimientosStockViaje(vendedorId: number): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/vendedores/${vendedorId}/stock-viaje/movimientos`
+    );
+  }
+
+  obtenerVentas(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/ventas`);
+  }
+
+  obtenerVentasVendedor(vendedorId: number): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/vendedores/${vendedorId}/ventas`
+    );
+  }
+
+  registrarVentaVendedor(vendedorId: number, datos: any): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/vendedores/${vendedorId}/ventas`,
+      datos
     );
   }
 }

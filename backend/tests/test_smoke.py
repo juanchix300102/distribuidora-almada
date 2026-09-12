@@ -148,5 +148,212 @@ class Almada2SmokeTest(unittest.TestCase):
         self.assertEqual(response.get_json()["productos_creados"], 1)
 
 
+    def test_vendor_stock_trip_and_sale_flow(self):
+        provider = self.client.post(
+            "/api/proveedores",
+            json={"nombre": "Proveedor viaje"}
+        )
+        self.assertEqual(provider.status_code, 201)
+        provider_id = provider.get_json()["id"]
+
+        product_response = self.client.post(
+            f"/api/proveedores/{provider_id}/productos",
+            json={
+                "nombre": "Producto de viaje",
+                "codigo": "VIAJE-001",
+                "precio_venta": 1000,
+                "stock": 12,
+                "precio_base": 800,
+                "iva": 0,
+                "ganancia": 25
+            }
+        )
+        self.assertEqual(product_response.status_code, 201)
+        producto_id = product_response.get_json()["producto_id"]
+
+        client_response = self.client.post(
+            "/api/clientes",
+            json={"nombre": "Cliente cuenta viaje"}
+        )
+        self.assertEqual(client_response.status_code, 201)
+        cliente_id = client_response.get_json()["cliente_id"]
+
+        seller_response = self.client.post(
+            "/api/vendedores",
+            json={
+                "nombre": "Vendedor prueba",
+                "usuario": "vendedor-prueba",
+                "contrasena": "1234",
+                "zona": "Zona norte"
+            }
+        )
+        self.assertEqual(seller_response.status_code, 201)
+        vendedor_id = seller_response.get_json()["id"]
+
+        seller_login = self.client.post(
+            "/api/login",
+            json={
+                "usuario": "vendedor-prueba",
+                "contrasena": "1234"
+            }
+        )
+        self.assertEqual(seller_login.status_code, 200)
+        self.assertEqual(seller_login.get_json()["rol"], "vendedor")
+        self.assertEqual(seller_login.get_json()["vendedor_id"], vendedor_id)
+
+        assigned = self.client.post(
+            f"/api/vendedores/{vendedor_id}/stock-viaje/asignar",
+            json={"producto_id": producto_id, "cantidad": 5}
+        )
+        self.assertEqual(assigned.status_code, 201)
+        self.assertEqual(assigned.get_json()["stock_viaje"], 5)
+        self.assertEqual(assigned.get_json()["stock_central"], 7)
+
+        returned = self.client.post(
+            f"/api/vendedores/{vendedor_id}/stock-viaje/devolver",
+            json={"producto_id": producto_id, "cantidad": 1}
+        )
+        self.assertEqual(returned.status_code, 200)
+        self.assertEqual(returned.get_json()["stock_viaje"], 4)
+        self.assertEqual(returned.get_json()["stock_central"], 8)
+
+        sale = self.client.post(
+            f"/api/vendedores/{vendedor_id}/ventas",
+            json={
+                "cliente_id": cliente_id,
+                "forma_pago": "Cuenta corriente",
+                "items": [
+                    {
+                        "producto_id": producto_id,
+                        "cantidad": 2
+                    }
+                ]
+            }
+        )
+        self.assertEqual(sale.status_code, 201)
+        self.assertEqual(sale.get_json()["total"], 2000)
+
+        trip_stock = self.client.get(
+            f"/api/vendedores/{vendedor_id}/stock-viaje"
+        ).get_json()
+        self.assertEqual(len(trip_stock), 1)
+        self.assertEqual(trip_stock[0]["cantidad"], 2)
+
+        account = self.client.get(
+            f"/api/clientes/{cliente_id}/cuenta-corriente"
+        ).get_json()
+        self.assertEqual(account["saldo_actual"], 2000)
+        self.assertEqual(account["movimientos"][0]["tipo"], "Venta vendedor")
+
+    def test_visual_catalog_tracks_stock_without_private_data(self):
+        provider = self.client.post(
+            "/api/proveedores",
+            json={"nombre": "Proveedor catálogo visual"}
+        )
+        self.assertEqual(provider.status_code, 201)
+
+        product_response = self.client.post(
+            f"/api/proveedores/{provider.get_json()['id']}/productos",
+            json={
+                "nombre": "Bisagra catálogo visual",
+                "descripcion": "Bisagra reforzada para muebles.",
+                "categoria": "Bisagras",
+                "foto": "catalogo-productos/bisagra-prueba.webp",
+                "precio_base": 500,
+                "ganancia": 40,
+                "variantes": [
+                    {
+                        "nombre_variante": "35 mm",
+                        "codigo": "CAT-35",
+                        "cantidad_caja": 1,
+                        "precio_venta": 700,
+                        "stock": 2
+                    },
+                    {
+                        "nombre_variante": "40 mm",
+                        "codigo": "CAT-40",
+                        "cantidad_caja": 1,
+                        "precio_venta": 800,
+                        "stock": 1
+                    }
+                ]
+            }
+        )
+        self.assertEqual(product_response.status_code, 201)
+        producto_id = product_response.get_json()["producto_id"]
+
+        seller_response = self.client.post(
+            "/api/vendedores",
+            json={
+                "nombre": "Vendedor catálogo",
+                "usuario": "vendedor-catalogo",
+                "contrasena": "1234"
+            }
+        )
+        self.assertEqual(seller_response.status_code, 201)
+        vendedor_id = seller_response.get_json()["id"]
+
+        catalog_response = self.client.get(
+            f"/api/vendedores/{vendedor_id}/catalogo-visual"
+        )
+        self.assertEqual(catalog_response.status_code, 200)
+        self.assertEqual(catalog_response.headers["Cache-Control"], "no-store")
+
+        product = next(
+            item for item in catalog_response.get_json()["productos"]
+            if item["id"] == producto_id
+        )
+        self.assertFalse(product["disponible"])
+        self.assertNotIn("precio_venta", product)
+        self.assertNotIn("proveedor", product)
+        self.assertNotIn("cantidad_viaje", product)
+        self.assertEqual(len(product["variantes"]), 2)
+        self.assertNotIn("precio_venta", product["variantes"][0])
+        self.assertNotIn("stock", product["variantes"][0])
+
+        assigned = self.client.post(
+            f"/api/vendedores/{vendedor_id}/stock-viaje/asignar",
+            json={"producto_id": producto_id, "cantidad": 2}
+        )
+        self.assertEqual(assigned.status_code, 201)
+
+        available_catalog = self.client.get(
+            f"/api/vendedores/{vendedor_id}/catalogo-visual"
+        ).get_json()
+        available_product = next(
+            item for item in available_catalog["productos"]
+            if item["id"] == producto_id
+        )
+        self.assertTrue(available_product["disponible"])
+
+        client_response = self.client.post(
+            "/api/clientes",
+            json={"nombre": "Cliente catálogo visual"}
+        )
+        self.assertEqual(client_response.status_code, 201)
+
+        sale = self.client.post(
+            f"/api/vendedores/{vendedor_id}/ventas",
+            json={
+                "cliente_id": client_response.get_json()["cliente_id"],
+                "forma_pago": "Efectivo",
+                "items": [
+                    {"producto_id": producto_id, "cantidad": 2}
+                ]
+            }
+        )
+        self.assertEqual(sale.status_code, 201)
+
+        unavailable_catalog = self.client.get(
+            f"/api/vendedores/{vendedor_id}/catalogo-visual"
+        ).get_json()
+        unavailable_product = next(
+            item for item in unavailable_catalog["productos"]
+            if item["id"] == producto_id
+        )
+        self.assertFalse(unavailable_product["disponible"])
+
+
+
 if __name__ == "__main__":
     unittest.main()

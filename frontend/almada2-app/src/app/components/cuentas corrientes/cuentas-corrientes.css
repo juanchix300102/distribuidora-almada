@@ -2,36 +2,36 @@ button {
   border: none;
   border-radius: 10px;
   padding: 12px 18px;
-  background: #2563eb;
+  background: #0646a7;
   color: white;
   font-weight: 800;
   cursor: pointer;
   transition: 0.2s;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
 button:hover {
-  background: #1d4ed8;
+  background: #032d73;
   transform: translateY(-1px);
 }
 
 input,
 select {
   width: 100%;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e5d9c7;
   border-radius: 10px;
   padding: 12px;
   outline: none;
   background: white;
-  color: #111827;
+  color: #171614;
   font-size: 15px;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
 input:focus,
 select:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  border-color: #0646a7;
+  box-shadow: 0 0 0 3px rgba(6, 70, 167, 0.15);
 }
 
 .panel,
@@ -45,7 +45,7 @@ select:focus {
 
 .panel-interno {
   box-shadow: none;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e5d9c7;
 }
 
 .panel-header {
@@ -64,25 +64,25 @@ select:focus {
 
 .panel-header p {
   margin: 6px 0 0;
-  color: #6b7280;
+  color: #71695f;
 }
 
 .btn-secundario {
-  background: #1f2937;
+  background: #23211e;
 }
 
 .btn-secundario:hover {
-  background: #111827;
+  background: #171614;
 }
 
 .btn-editar {
-  background: #2563eb;
+  background: #0646a7;
   padding: 8px 12px;
   font-size: 13px;
 }
 
 .btn-editar:hover {
-  background: #1d4ed8;
+  background: #032d73;
 }
 
 .error {
@@ -97,9 +97,9 @@ select:focus {
 
 .sin-datos {
   padding: 18px;
-  background: #f3f4f6;
+  background: #f7f2ea;
   border-radius: 14px;
-  color: #6b7280;
+  color: #71695f;
   text-align: center;
 }
 
@@ -111,21 +111,21 @@ select:focus {
 }
 
 .cuenta-resumen div {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background: #f5eee3;
+  border: 1px solid #dac6a7;
   border-radius: 16px;
   padding: 18px;
 }
 
 .cuenta-resumen span {
   display: block;
-  color: #6b7280;
+  color: #71695f;
   margin-bottom: 6px;
 }
 
 .cuenta-resumen strong {
   font-size: 24px;
-  color: #111827;
+  color: #171614;
 }
 
 .cuenta-toolbar {
@@ -170,8 +170,8 @@ table {
 }
 
 th {
-  background: #eff6ff;
-  color: #111827;
+  background: #f5eee3;
+  color: #171614;
   text-align: left;
   padding: 13px;
   font-size: 14px;
@@ -180,19 +180,19 @@ th {
 
 td {
   padding: 12px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5d9c7;
   vertical-align: middle;
   font-size: 14px;
 }
 
 td small {
   display: block;
-  color: #6b7280;
+  color: #71695f;
   margin-top: 4px;
 }
 
 tr:hover {
-  background: #eff6ff;
+  background: #f5eee3;
 }
 
 .acciones {

@@ -18,20 +18,23 @@
 - [x] Configurar acceso interno del administrador.
 - [x] Retirar usuarios de tipo cliente.
 - [x] Actualizar nombre técnico del proyecto.
-- [ ] Incorporar logo y colores cuando el cliente los entregue.
+- [x] Incorporar logo y colores propios de Almada 2.
+- [ ] Aprobar visualmente la nueva interfaz en computadora y teléfono.
 
 ### Etapa 2 — Vendedores y venta ambulante
 
-- [ ] Crear rol y gestión de vendedores.
-- [ ] Crear catálogo visual.
-- [ ] Crear stock en viaje por vendedor.
-- [ ] Registrar cargas, devoluciones y ajustes.
-- [ ] Crear pantalla para cargar ventas.
-- [ ] Crear historial de ventas por vendedor.
+- [x] Crear rol y gestión de vendedores.
+- [x] Crear catálogo visual vinculado al stock en viaje.
+- [ ] Aprobar el catálogo visual con productos e imágenes reales.
+- [x] Crear stock en viaje por vendedor.
+- [x] Registrar cargas y devoluciones de stock en viaje.
+- [ ] Agregar ajustes manuales de stock en viaje.
+- [x] Crear pantalla para cargar ventas.
+- [x] Crear historial de ventas por vendedor.
 
 ### Etapa 3 — Operación comercial
 
-- [ ] Integrar ventas con cuenta corriente.
+- [x] Integrar ventas a deuda con cuenta corriente.
 - [ ] Registrar pagos, deuda y formas de pago.
 - [ ] Agregar número de cheque.
 - [ ] Definir e implementar el indicador de facturación.

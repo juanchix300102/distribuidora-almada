@@ -2,16 +2,16 @@ button {
   border: none;
   border-radius: 10px;
   padding: 12px 18px;
-  background: #2563eb;
+  background: #0646a7;
   color: white;
   font-weight: 800;
   cursor: pointer;
   transition: 0.2s;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
 button:hover {
-  background: #1d4ed8;
+  background: #032d73;
   transform: translateY(-1px);
 }
 
@@ -26,14 +26,14 @@ select,
 textarea {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e5d9c7;
   border-radius: 10px;
   padding: 12px;
   outline: none;
   background: white;
-  color: #111827;
+  color: #171614;
   font-size: 15px;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
 textarea {
@@ -44,8 +44,8 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  border-color: #0646a7;
+  box-shadow: 0 0 0 3px rgba(6, 70, 167, 0.15);
 }
 
 .cards {
@@ -63,19 +63,19 @@ textarea:focus {
   border-radius: 18px;
   padding: 20px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
-  border-left: 5px solid #2563eb;
+  border-left: 5px solid #0646a7;
 }
 
 .card span {
   display: block;
-  color: #6b7280;
+  color: #71695f;
   font-weight: 700;
   margin-bottom: 8px;
 }
 
 .card strong {
   font-size: 30px;
-  color: #111827;
+  color: #171614;
 }
 
 .card.warning {
@@ -112,12 +112,12 @@ textarea:focus {
 
 .panel-header p {
   margin: 6px 0 0;
-  color: #6b7280;
+  color: #71695f;
 }
 
 .formulario-subtitulo {
   margin: 6px 0 0;
-  color: #6b7280;
+  color: #71695f;
   line-height: 1.5;
 }
 
@@ -132,7 +132,7 @@ textarea:focus {
 }
 
 .btn-cerrar {
-  background: #111827;
+  background: #171614;
   padding: 8px 12px;
   flex-shrink: 0;
 }
@@ -167,11 +167,11 @@ textarea:focus {
 .campo label {
   font-size: 13px;
   font-weight: 800;
-  color: #374151;
+  color: #403a34;
 }
 
 .bloque-formulario {
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e5d9c7;
   border-radius: 16px;
   padding: 18px;
   margin-bottom: 18px;
@@ -188,20 +188,20 @@ textarea:focus {
 
 .bloque-titulo h3 {
   margin: 0;
-  color: #111827;
+  color: #171614;
   font-size: 19px;
 }
 
 .bloque-titulo p {
   margin: 5px 0 0;
-  color: #6b7280;
+  color: #71695f;
   font-size: 14px;
   line-height: 1.45;
 }
 
 .bloque-variantes {
-  background: #fffaf5;
-  border-color: #bfdbfe;
+  background: #faf5ec;
+  border-color: #dac6a7;
 }
 
 .variantes-header {
@@ -216,8 +216,8 @@ textarea:focus {
 .ayuda-variante {
   padding: 12px 14px;
   border-radius: 10px;
-  background: #eff6ff;
-  color: #1e3a8a;
+  background: #f5eee3;
+  color: #032d73;
   font-size: 13px;
   line-height: 1.5;
   margin-bottom: 15px;
@@ -226,7 +226,7 @@ textarea:focus {
 .variantes-scroll {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e5d9c7;
   border-radius: 12px;
   background: white;
 }
@@ -238,7 +238,7 @@ textarea:focus {
 }
 
 .tabla-variantes th {
-  background: #111827;
+  background: #171614;
   color: white;
   padding: 11px;
   font-size: 12px;
@@ -247,7 +247,7 @@ textarea:focus {
 
 .tabla-variantes td {
   padding: 8px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5d9c7;
 }
 
 .tabla-variantes tr:last-child td {
@@ -267,14 +267,14 @@ textarea:focus {
 .precio-sugerido-admin {
   min-width: 125px;
   text-align: center;
-  background: #eff6ff;
-  color: #1e3a8a;
+  background: #f5eee3;
+  color: #032d73;
   font-weight: 900;
   white-space: nowrap;
 }
 
 .btn-quitar-variante {
-  background: #111827;
+  background: #171614;
   padding: 9px 12px;
 }
 
@@ -286,7 +286,7 @@ textarea:focus {
   text-align: right;
   margin-top: 10px;
   font-size: 13px;
-  color: #6b7280;
+  color: #71695f;
   font-weight: 700;
 }
 
@@ -297,8 +297,8 @@ textarea:focus {
 }
 
 .btn-cancelar {
-  background: #e5e7eb;
-  color: #111827;
+  background: #e5d9c7;
+  color: #171614;
 }
 
 .btn-cancelar:hover {
@@ -317,9 +317,9 @@ textarea:focus {
 
 .sin-datos {
   padding: 18px;
-  background: #f3f4f6;
+  background: #f7f2ea;
   border-radius: 14px;
-  color: #6b7280;
+  color: #71695f;
   text-align: center;
 }
 
@@ -338,8 +338,8 @@ table {
 }
 
 th {
-  background: #eff6ff;
-  color: #111827;
+  background: #f5eee3;
+  color: #171614;
   text-align: left;
   padding: 13px;
   font-size: 14px;
@@ -348,24 +348,24 @@ th {
 
 td {
   padding: 12px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5d9c7;
   vertical-align: middle;
   font-size: 14px;
 }
 
 .tabla-productos tbody tr:hover {
-  background: #eff6ff;
+  background: #f5eee3;
 }
 
 .producto-nombre {
   font-weight: 800;
-  color: #111827;
+  color: #171614;
 }
 
 .producto-descripcion {
   max-width: 280px;
   margin-top: 4px;
-  color: #6b7280;
+  color: #71695f;
   font-size: 12px;
   line-height: 1.4;
 }
@@ -374,8 +374,8 @@ td {
   display: inline-block;
   padding: 6px 10px;
   border-radius: 999px;
-  background: #dbeafe;
-  color: #1e3a8a;
+  background: #e7d5b8;
+  color: #032d73;
   font-size: 12px;
   font-weight: 800;
 }
@@ -384,8 +384,8 @@ td {
   display: inline-block;
   padding: 6px 10px;
   border-radius: 999px;
-  background: #f3f4f6;
-  color: #6b7280;
+  background: #f7f2ea;
+  color: #71695f;
   font-size: 12px;
   font-weight: 800;
 }
@@ -399,8 +399,8 @@ td {
 }
 
 .lista-variantes-mini span {
-  background: #f3f4f6;
-  color: #374151;
+  background: #f7f2ea;
+  color: #403a34;
   border-radius: 6px;
   padding: 3px 6px;
   font-size: 11px;
@@ -430,17 +430,17 @@ td {
 }
 
 .btn-editar {
-  background: #2563eb;
+  background: #0646a7;
   padding: 8px 12px;
   font-size: 13px;
 }
 
 .btn-editar:hover {
-  background: #1d4ed8;
+  background: #032d73;
 }
 
 .btn-eliminar {
-  background: #111827;
+  background: #171614;
   padding: 8px 12px;
   font-size: 13px;
 }

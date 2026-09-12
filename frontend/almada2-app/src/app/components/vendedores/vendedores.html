@@ -1,0 +1,249 @@
+<section class="panel vendedores-panel">
+  <div class="panel-header">
+    <div>
+      <span class="kicker">Equipo comercial</span>
+      <h2>Vendedores</h2>
+      <p>Alta de vendedores, credenciales y control de mercadería en viaje.</p>
+    </div>
+
+    <button type="button" (click)="abrirNuevo()">+ Agregar vendedor</button>
+  </div>
+
+  <section *ngIf="error" class="error">{{ error }}</section>
+
+  <section *ngIf="mostrarFormulario" class="formulario">
+    <div class="formulario-header">
+      <div>
+        <span class="kicker">{{ editandoId ? 'Edición' : 'Nuevo acceso' }}</span>
+        <h3>{{ editandoId ? 'Editar vendedor' : 'Registrar vendedor' }}</h3>
+      </div>
+      <button type="button" class="btn-oscuro" (click)="cerrarFormulario()">✕</button>
+    </div>
+
+    <form (ngSubmit)="guardar()">
+      <div class="form-grid">
+        <label>
+          Nombre
+          <input [(ngModel)]="vendedorForm.nombre" name="nombre" placeholder="Nombre y apellido" />
+        </label>
+
+        <label>
+          Usuario
+          <input [(ngModel)]="vendedorForm.usuario" name="usuario" placeholder="Usuario de acceso" />
+        </label>
+
+        <label>
+          Contraseña
+          <input
+            type="password"
+            [(ngModel)]="vendedorForm.contrasena"
+            name="contrasena"
+            [placeholder]="editandoId ? 'Dejar vacío para conservarla' : 'Mínimo 4 caracteres'"
+          />
+        </label>
+
+        <label>
+          Teléfono
+          <input [(ngModel)]="vendedorForm.telefono" name="telefono" placeholder="Teléfono" />
+        </label>
+
+        <label>
+          Zona
+          <input [(ngModel)]="vendedorForm.zona" name="zona" placeholder="Zona / recorrido" />
+        </label>
+
+        <label class="campo-amplio">
+          Observaciones
+          <input [(ngModel)]="vendedorForm.observaciones" name="observaciones" placeholder="Notas internas" />
+        </label>
+      </div>
+
+      <label *ngIf="editandoId" class="check-activo">
+        <input type="checkbox" [(ngModel)]="vendedorForm.activo" name="activo" />
+        Vendedor activo
+      </label>
+
+      <button type="submit">{{ editandoId ? 'Guardar cambios' : 'Crear vendedor' }}</button>
+    </form>
+  </section>
+
+  <div class="resumen-grid">
+    <article class="resumen-card">
+      <span>Vendedores</span>
+      <strong>{{ vendedores.length }}</strong>
+      <small>Registrados en el sistema</small>
+    </article>
+    <article class="resumen-card">
+      <span>Unidades en viaje</span>
+      <strong>{{ vendedorSeleccionado ? totalUnidadesViaje : '—' }}</strong>
+      <small>{{ vendedorSeleccionado ? vendedorSeleccionado.nombre : 'Elegí un vendedor' }}</small>
+    </article>
+    <article class="resumen-card">
+      <span>Ventas registradas</span>
+      <strong>{{ ventas.length }}</strong>
+      <small>Historial general</small>
+    </article>
+  </div>
+
+  <div class="layout-vendedores">
+    <section class="bloque lista-vendedores">
+      <div class="bloque-titulo">
+        <div>
+          <span class="kicker">Personal</span>
+          <h3>Lista de vendedores</h3>
+        </div>
+      </div>
+
+      <p *ngIf="cargando">Cargando...</p>
+      <div *ngIf="!cargando && vendedores.length === 0" class="sin-datos">No hay vendedores cargados.</div>
+
+      <div class="vendedor-lista" *ngIf="!cargando && vendedores.length > 0">
+        <article
+          *ngFor="let vendedor of vendedores"
+          class="vendedor-item"
+          [class.seleccionado]="vendedorSeleccionado?.id === vendedor.id"
+          [class.inactivo]="!vendedor.activo"
+          (click)="vendedor.activo && seleccionarVendedor(vendedor)"
+        >
+          <div class="avatar">{{ (vendedor.nombre || 'V').charAt(0).toUpperCase() }}</div>
+          <div class="vendedor-info">
+            <strong>{{ vendedor.nombre }}</strong>
+            <span>@{{ vendedor.usuario }} · {{ vendedor.zona || 'Sin zona' }}</span>
+            <small>{{ vendedor.activo ? 'Activo' : 'Inactivo' }}</small>
+          </div>
+          <div class="acciones" (click)="$event.stopPropagation()">
+            <button type="button" class="btn-mini" (click)="editar(vendedor)">Editar</button>
+            <button
+              *ngIf="vendedor.activo"
+              type="button"
+              class="btn-mini btn-oscuro"
+              (click)="desactivar(vendedor)"
+            >
+              Desactivar
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="bloque stock-bloque">
+      <ng-container *ngIf="vendedorSeleccionado; else elegirVendedor">
+        <div class="bloque-titulo">
+          <div>
+            <span class="kicker">Stock en viaje</span>
+            <h3>{{ vendedorSeleccionado.nombre }}</h3>
+            <p>{{ vendedorSeleccionado.zona || 'Sin zona asignada' }}</p>
+          </div>
+        </div>
+
+        <div class="asignacion-box">
+          <h4>Cargar mercadería al viaje</h4>
+          <input
+            class="buscador"
+            [(ngModel)]="filtroProducto"
+            name="filtroProducto"
+            placeholder="Buscar por código, producto o proveedor"
+          />
+
+          <div class="asignacion-grid">
+            <select [(ngModel)]="asignacionForm.producto_id" name="productoAsignar">
+              <option value="">Seleccionar producto</option>
+              <option *ngFor="let producto of productosFiltrados" [value]="producto.id">
+                {{ producto.codigo || 'S/C' }} · {{ producto.nombre }} · Stock: {{ producto.stock }}
+              </option>
+            </select>
+
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="asignacionForm.cantidad"
+              name="cantidadAsignar"
+              placeholder="Cantidad"
+            />
+
+            <button type="button" (click)="asignarStock()">Asignar al viaje</button>
+          </div>
+        </div>
+
+        <div *ngIf="stockViaje.length === 0" class="sin-datos">
+          Este vendedor todavía no tiene mercadería en viaje.
+        </div>
+
+        <div class="tabla-scroll" *ngIf="stockViaje.length > 0">
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Producto</th>
+                <th>En viaje</th>
+                <th>Precio</th>
+                <th>Devolver</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of stockViaje">
+                <td>{{ item.codigo || '-' }}</td>
+                <td>
+                  <strong>{{ item.nombre }}</strong>
+                  <small>{{ item.proveedor || 'Sin proveedor' }}</small>
+                </td>
+                <td><span class="badge-stock">{{ item.cantidad }}</span></td>
+                <td>${{ formatearMoneda(item.precio_venta) }}</td>
+                <td>
+                  <div class="devolucion-control">
+                    <input
+                      type="number"
+                      min="1"
+                      [max]="item.cantidad"
+                      [(ngModel)]="devoluciones[item.producto_id]"
+                      [name]="'devolver-' + item.producto_id"
+                      placeholder="Cant."
+                    />
+                    <button type="button" class="btn-mini" (click)="devolver(item)">Devolver</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="subbloque" *ngIf="ventasSeleccionadas.length > 0">
+          <h4>Últimas ventas</h4>
+          <div class="ventas-lista">
+            <article *ngFor="let venta of ventasSeleccionadas.slice(0, 8)">
+              <div>
+                <strong>Venta #{{ venta.id }}</strong>
+                <span>{{ venta.cliente || 'Consumidor final' }} · {{ venta.forma_pago }}</span>
+              </div>
+              <strong>${{ formatearMoneda(venta.total) }}</strong>
+            </article>
+          </div>
+        </div>
+
+        <div class="subbloque" *ngIf="movimientos.length > 0">
+          <h4>Movimientos recientes de mercadería</h4>
+          <div class="movimientos-lista">
+            <article *ngFor="let movimiento of movimientos.slice(0, 10)">
+              <span class="mov-tipo">{{ movimiento.tipo }}</span>
+              <div>
+                <strong>{{ movimiento.producto }}</strong>
+                <small>{{ movimiento.fecha }}</small>
+              </div>
+              <strong [class.negativo]="movimiento.cantidad < 0">
+                {{ movimiento.cantidad > 0 ? '+' : '' }}{{ movimiento.cantidad }}
+              </strong>
+            </article>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #elegirVendedor>
+        <div class="estado-vacio-grande">
+          <span>⇄</span>
+          <h3>Elegí un vendedor</h3>
+          <p>Desde acá vas a cargar, devolver y controlar su stock en viaje.</p>
+        </div>
+      </ng-template>
+    </section>
+  </div>
+</section>

@@ -1,0 +1,47 @@
+ALMADA 2 - ACTUALIZACION FUNCIONAL 03
+Catalogo visual sincronizado con el stock en viaje
+
+Vista simplificada para clientes: titulo principal destacado y productos
+ordenados, sin buscador ni filtros. El logo reemplaza "DA" cuando un producto
+todavia no tiene una fotografia cargada.
+
+1. Confirmar que la actualizacion 02 de vendedores, stock en viaje y ventas
+   ya se encuentra instalada.
+2. Hacer un commit o una copia de seguridad del proyecto actual.
+3. Descomprimir este ZIP sobre la carpeta raiz de Almada 2 y reemplazar los
+   archivos existentes.
+4. Reiniciar el backend. No se borran productos, vendedores, ventas ni stock.
+5. Reiniciar Angular.
+
+USO EN LA MISMA COMPUTADORA
+
+Backend:
+  cd backend
+  .\venv\Scripts\Activate.ps1
+  python app.py
+
+Frontend, en otra terminal:
+  cd frontend\almada2-app
+  npm start
+
+USO EN DOS DISPOSITIVOS DE LA MISMA RED WI-FI
+
+1. Iniciar el backend como se indica arriba.
+2. Iniciar el frontend con:
+     npm run start:lan
+3. Ejecutar ipconfig y buscar la Direccion IPv4 de la computadora.
+4. En la tablet abrir:
+     http://IP-DE-LA-COMPUTADORA:4200
+5. Iniciar sesion en ambos dispositivos con el mismo usuario vendedor.
+6. Dejar "Vista de venta" abierta en un dispositivo y "Catalogo visual" en
+   la tablet.
+7. Si Windows pregunta, permitir Python y Node.js solo en redes privadas.
+
+PRUEBA RAPIDA
+
+- Asignar dos unidades de un producto a un vendedor.
+- En la tablet comprobar que figure "Disponible".
+- Vender las dos unidades desde el otro dispositivo.
+- En un maximo aproximado de cinco segundos debe figurar "Sin stock".
+- Abrir una ficha y comprobar que solo muestre imagen, nombre, codigo,
+  descripcion y medidas/modelos, sin precios ni cantidades internas.

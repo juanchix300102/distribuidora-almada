@@ -3,37 +3,70 @@
   (loginExitoso)="procesarLogin($event)">
 </app-auth>
 
-<div class="layout" *ngIf="autenticado && vista !== 'login'">
+<app-catalogo-visual
+  *ngIf="autenticado && vista === 'catalogo-visual'"
+  [vendedorId]="vendedorId"
+  [vendedorNombre]="nombreActual"
+  [modoAdmin]="rolActual === 'admin'"
+  (cerrarCatalogo)="cerrarCatalogoVisual()">
+</app-catalogo-visual>
+
+<div
+  class="layout"
+  *ngIf="
+    autenticado &&
+    vista !== 'login' &&
+    vista !== 'catalogo-visual'
+  "
+>
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-logo-placeholder" aria-hidden="true">A2</div>
+      <div class="brand-logo">
+        <img
+          src="logo-distribuidora-almada.jpeg"
+          alt="Distribuidora Almada"
+        />
+      </div>
 
-      <div>
-        <h2>Almada 2</h2>
-        <p>Sistema comercial interno</p>
+      <div class="brand-texto">
+        <span>{{ rolActual === 'admin' ? 'Gestión comercial' : 'Venta ambulante' }}</span>
+        <p>{{ rolActual === 'admin' ? 'Panel de uso interno' : 'Panel del vendedor' }}</p>
       </div>
     </div>
 
-    <nav>
+    <nav *ngIf="rolActual === 'admin'">
+      <div class="nav-separador nav-separador-principal">
+        Administración
+      </div>
+
       <a
         [class.active]="vista === 'panel'"
         (click)="cambiarVista('panel')"
       >
-        Panel
+        <span class="nav-contenido">
+          <span class="nav-icono" aria-hidden="true">⌂</span>
+          Panel
+        </span>
       </a>
 
       <a
         [class.active]="vista === 'proveedores'"
         (click)="cambiarVista('proveedores')"
       >
-        Proveedores
+        <span class="nav-contenido">
+          <span class="nav-icono" aria-hidden="true">▦</span>
+          Proveedores
+        </span>
       </a>
 
       <a
         [class.active]="vista === 'clientes'"
         (click)="cambiarVista('clientes')"
       >
-        Clientes
+        <span class="nav-contenido">
+          <span class="nav-icono" aria-hidden="true">◎</span>
+          Clientes
+        </span>
       </a>
 
       <a
@@ -43,93 +76,181 @@
         "
         (click)="cambiarVista('cuenta-corriente-lista')"
       >
-        Cuenta corriente
+        <span class="nav-contenido">
+          <span class="nav-icono" aria-hidden="true">$</span>
+          Cuenta corriente
+        </span>
       </a>
 
-      <div class="nav-separador">Próximas etapas</div>
+      <div class="nav-separador">Venta ambulante</div>
 
-      <a class="disabled">Catálogo visual</a>
-      <a class="disabled">Vendedores</a>
-      <a class="disabled">Stock en viaje</a>
-      <a class="disabled">Ventas</a>
+      <a
+        [class.active]="vista === 'catalogo-visual'"
+        (click)="cambiarVista('catalogo-visual')"
+      >
+        <span class="nav-contenido">
+          <span class="nav-icono" aria-hidden="true">▧</span>
+          Catálogo visual
+        </span>
+      </a>
+
+      <a
+        [class.active]="vista === 'vendedores'"
+        (click)="cambiarVista('vendedores')"
+      >
+        <span class="nav-contenido">
+          <span class="nav-icono" aria-hidden="true">⇄</span>
+          Vendedores y viajes
+        </span>
+      </a>
+
+      <div class="nav-separador">Próximamente</div>
+
       <a class="disabled">Aumentos de precios</a>
       <a class="disabled">Gastos</a>
       <a class="disabled">Saldos</a>
       <a class="disabled">Reportes</a>
     </nav>
+
+    <nav *ngIf="rolActual === 'vendedor'">
+      <div class="nav-separador nav-separador-principal">Mi recorrido</div>
+
+      <a
+        [class.active]="vista === 'venta-vendedor'"
+        (click)="cambiarVista('venta-vendedor')"
+      >
+        <span class="nav-contenido">
+          <span class="nav-icono" aria-hidden="true">$</span>
+          Vista de venta
+        </span>
+      </a>
+
+      <a
+        [class.active]="vista === 'catalogo-visual'"
+        (click)="cambiarVista('catalogo-visual')"
+      >
+        <span class="nav-contenido">
+          <span class="nav-icono" aria-hidden="true">▧</span>
+          Catálogo visual
+        </span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="estado-punto" aria-hidden="true"></span>
+      Sistema operativo
+    </div>
   </aside>
 
   <main class="content">
-    <header class="topbar">
-      <div>
-        <span class="etiqueta">Almada 2</span>
+    <div class="content-inner">
+      <header class="topbar">
+        <div class="topbar-titulo">
+          <div class="topbar-meta">
+            <span class="etiqueta">Distribuidora Almada</span>
+            <span class="area-actual">
+              {{ rolActual === 'admin' ? 'Área administrativa' : 'Área vendedor' }}
+            </span>
+          </div>
 
-        <h1>
-          {{
-            vista === 'panel'
-              ? 'Resumen general'
-              : vista === 'proveedores'
-                ? 'Proveedores y precios'
-                : vista === 'clientes'
-                  ? 'Clientes'
-                  : vista === 'cuenta-corriente-lista'
-                    ? 'Cuenta corriente'
-                    : 'Detalle de cuenta'
-          }}
-        </h1>
+          <h1>
+            {{
+              vista === 'panel'
+                ? 'Panel general'
+                : vista === 'proveedores'
+                  ? 'Proveedores y precios'
+                  : vista === 'clientes'
+                    ? 'Clientes'
+                    : vista === 'cuenta-corriente-lista'
+                      ? 'Cuenta corriente'
+                      : vista === 'cuenta-corriente'
+                        ? 'Detalle de cuenta'
+                        : vista === 'vendedores'
+                          ? 'Vendedores y stock en viaje'
+                          : 'Mi jornada de venta'
+            }}
+          </h1>
 
-        <p>
-          {{
-            vista === 'panel'
-              ? 'Indicadores principales del sistema comercial.'
-              : vista === 'proveedores'
-                ? 'Proveedores y costos de los productos.'
-                : vista === 'clientes'
-                  ? 'Registro interno y datos comerciales de clientes.'
-                  : vista === 'cuenta-corriente-lista'
-                    ? 'Buscá clientes, revisá saldos y accedé a sus cuentas.'
-                    : 'Pagos, deudas y movimientos del cliente.'
-          }}
-        </p>
-      </div>
+          <p>
+            {{
+              vista === 'panel'
+                ? 'Una vista clara del movimiento comercial.'
+                : vista === 'proveedores'
+                  ? 'Proveedores y costos de los productos.'
+                  : vista === 'clientes'
+                    ? 'Registro interno y datos comerciales de clientes.'
+                    : vista === 'cuenta-corriente-lista'
+                      ? 'Buscá clientes, revisá saldos y accedé a sus cuentas.'
+                      : vista === 'cuenta-corriente'
+                        ? 'Pagos, deudas y movimientos del cliente.'
+                        : vista === 'vendedores'
+                          ? 'Credenciales, cargas, devoluciones, ventas y mercadería de cada vendedor.'
+                          : 'Registrá ventas directamente desde tu mercadería disponible.'
+            }}
+          </p>
+        </div>
 
-      <button
-        type="button"
-        class="btn-cerrar-sesion"
-        (click)="cerrarSesion()"
-      >
-        Cerrar sesión
-      </button>
-    </header>
+        <div class="topbar-acciones">
+          <div class="usuario-actual">
+            <span class="usuario-avatar" aria-hidden="true">
+              {{ (nombreActual || (rolActual === 'admin' ? 'A' : 'V')).charAt(0).toUpperCase() }}
+            </span>
+            <span>
+              <strong>{{ nombreActual || (rolActual === 'admin' ? 'Administrador' : 'Vendedor') }}</strong>
+              <small>{{ rolActual === 'admin' ? 'Administrador' : 'Vendedor' }} · Sesión activa</small>
+            </span>
+          </div>
 
-    <section *ngIf="error" class="error">
-      {{ error }}
-    </section>
+          <button
+            type="button"
+            class="btn-cerrar-sesion"
+            (click)="cerrarSesion()"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </header>
 
-    <app-productos-admin
-      *ngIf="vista === 'panel'"
-      [resumen]="resumen"
-      (resumenActualizado)="cargarResumen()">
-    </app-productos-admin>
+      <section *ngIf="error" class="error">
+        {{ error }}
+      </section>
 
-    <app-proveedores
-      *ngIf="vista === 'proveedores'"
-      (resumenActualizado)="cargarResumen()">
-    </app-proveedores>
+      <app-productos-admin
+        *ngIf="rolActual === 'admin' && vista === 'panel'"
+        [resumen]="resumen"
+        (resumenActualizado)="cargarResumen()">
+      </app-productos-admin>
 
-    <app-clientes
-      *ngIf="vista === 'clientes'"
-      (verCuenta)="abrirCuentaCorrienteDesdeClientes($event)"
-      (clientesActualizados)="cargarResumen()">
-    </app-clientes>
+      <app-proveedores
+        *ngIf="rolActual === 'admin' && vista === 'proveedores'"
+        (resumenActualizado)="cargarResumen()">
+      </app-proveedores>
 
-    <app-cuentas-corrientes
-      *ngIf="
-        vista === 'cuenta-corriente-lista' ||
-        vista === 'cuenta-corriente'
-      "
-      [clienteInicial]="clienteCuentaInicial"
-      (resumenActualizado)="cargarResumen()">
-    </app-cuentas-corrientes>
+      <app-clientes
+        *ngIf="rolActual === 'admin' && vista === 'clientes'"
+        (verCuenta)="abrirCuentaCorrienteDesdeClientes($event)"
+        (clientesActualizados)="cargarResumen()">
+      </app-clientes>
+
+      <app-cuentas-corrientes
+        *ngIf="
+          rolActual === 'admin' &&
+          (vista === 'cuenta-corriente-lista' || vista === 'cuenta-corriente')
+        "
+        [clienteInicial]="clienteCuentaInicial"
+        (resumenActualizado)="cargarResumen()">
+      </app-cuentas-corrientes>
+
+      <app-vendedores
+        *ngIf="rolActual === 'admin' && vista === 'vendedores'"
+        (resumenActualizado)="cargarResumen()">
+      </app-vendedores>
+
+      <app-venta-vendedor
+        *ngIf="rolActual === 'vendedor' && vista === 'venta-vendedor'"
+        [vendedorId]="vendedorId"
+        [vendedorNombre]="nombreActual">
+      </app-venta-vendedor>
+    </div>
   </main>
 </div>

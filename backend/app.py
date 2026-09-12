@@ -365,6 +365,87 @@ def crear_tablas():
         )
     """)
 
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS vendedores (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL UNIQUE,
+            nombre TEXT NOT NULL,
+            telefono TEXT,
+            zona TEXT,
+            observaciones TEXT,
+            activo INTEGER NOT NULL DEFAULT 1,
+            fecha_alta TEXT NOT NULL,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS stock_viaje (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vendedor_id INTEGER NOT NULL,
+            producto_id INTEGER NOT NULL,
+            cantidad INTEGER NOT NULL DEFAULT 0,
+            actualizado_en TEXT,
+            UNIQUE (vendedor_id, producto_id),
+            FOREIGN KEY (vendedor_id) REFERENCES vendedores(id),
+            FOREIGN KEY (producto_id) REFERENCES productos(id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS ventas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vendedor_id INTEGER NOT NULL,
+            cliente_id INTEGER,
+            fecha TEXT NOT NULL,
+            forma_pago TEXT NOT NULL,
+            total REAL NOT NULL DEFAULT 0,
+            observaciones TEXT,
+            FOREIGN KEY (vendedor_id) REFERENCES vendedores(id),
+            FOREIGN KEY (cliente_id) REFERENCES clientes(id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS venta_detalles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            venta_id INTEGER NOT NULL,
+            producto_id INTEGER NOT NULL,
+            cantidad INTEGER NOT NULL,
+            precio_unitario REAL NOT NULL,
+            subtotal REAL NOT NULL,
+            FOREIGN KEY (venta_id) REFERENCES ventas(id),
+            FOREIGN KEY (producto_id) REFERENCES productos(id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS movimientos_stock_viaje (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vendedor_id INTEGER NOT NULL,
+            producto_id INTEGER NOT NULL,
+            fecha TEXT NOT NULL,
+            tipo TEXT NOT NULL,
+            cantidad INTEGER NOT NULL,
+            descripcion TEXT,
+            stock_viaje_resultante INTEGER NOT NULL DEFAULT 0,
+            stock_central_resultante INTEGER NOT NULL DEFAULT 0,
+            FOREIGN KEY (vendedor_id) REFERENCES vendedores(id),
+            FOREIGN KEY (producto_id) REFERENCES productos(id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_stock_viaje_vendedor
+        ON stock_viaje(vendedor_id)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_ventas_vendedor
+        ON ventas(vendedor_id)
+    """)
+
     conexion.commit()
     conexion.close()
 
@@ -440,7 +521,6 @@ def login():
     """, (usuario,))
 
     usuario_encontrado = cursor.fetchone()
-    conexion.close()
 
     if (
         not usuario_encontrado
@@ -450,16 +530,37 @@ def login():
             contrasena
         )
     ):
+        conexion.close()
         return jsonify({
             "mensaje": "Usuario o contraseña incorrectos"
         }), 401
 
-    return jsonify({
+    respuesta = {
         "mensaje": "Login correcto",
         "usuario_id": usuario_encontrado["id"],
         "usuario": usuario_encontrado["usuario"],
         "rol": usuario_encontrado["rol"]
-    })
+    }
+
+    if usuario_encontrado["rol"] == "vendedor":
+        cursor.execute("""
+            SELECT id, nombre, activo
+            FROM vendedores
+            WHERE usuario_id = ?
+        """, (usuario_encontrado["id"],))
+        vendedor = cursor.fetchone()
+
+        if not vendedor or not vendedor["activo"]:
+            conexion.close()
+            return jsonify({
+                "mensaje": "El vendedor no está habilitado"
+            }), 403
+
+        respuesta["vendedor_id"] = vendedor["id"]
+        respuesta["nombre"] = vendedor["nombre"]
+
+    conexion.close()
+    return jsonify(respuesta)
 
 
 @app.route("/api/resumen", methods=["GET"])
@@ -482,6 +583,20 @@ def resumen():
     cursor.execute("SELECT SUM(saldo_actual) FROM clientes")
     saldo_clientes = cursor.fetchone()[0] or 0
 
+    cursor.execute("SELECT COUNT(*) FROM vendedores WHERE activo = 1")
+    total_vendedores = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COALESCE(SUM(cantidad), 0) FROM stock_viaje")
+    unidades_en_viaje = cursor.fetchone()[0] or 0
+
+    mes_actual = datetime.now().strftime("%Y-%m")
+    cursor.execute("""
+        SELECT COALESCE(SUM(total), 0)
+        FROM ventas
+        WHERE substr(fecha, 1, 7) = ?
+    """, (mes_actual,))
+    ventas_mes = cursor.fetchone()[0] or 0
+
     conexion.close()
 
     return jsonify({
@@ -490,7 +605,9 @@ def resumen():
         "proveedores": total_proveedores,
         "clientes": total_clientes,
         "saldo_clientes": saldo_clientes,
-        "ventas_mes": 0
+        "vendedores": total_vendedores,
+        "unidades_en_viaje": unidades_en_viaje,
+        "ventas_mes": ventas_mes
     })
 
 
@@ -547,7 +664,7 @@ def productos_por_proveedor(proveedor_id):
     cursor = conexion.cursor()
 
     cursor.execute("""
-        SELECT 
+        SELECT
             pp.id AS precio_id,
             p.id AS producto_id,
             p.codigo,
@@ -1349,6 +1466,901 @@ def registrar_pago_cliente(cliente_id):
     }), 201
 
 
+
+@app.route("/api/vendedores", methods=["GET"])
+def listar_vendedores():
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT
+            v.id,
+            v.usuario_id,
+            v.nombre,
+            v.telefono,
+            v.zona,
+            v.observaciones,
+            v.activo,
+            v.fecha_alta,
+            u.usuario
+        FROM vendedores v
+        INNER JOIN usuarios u ON u.id = v.usuario_id
+        ORDER BY v.activo DESC, v.nombre ASC
+    """)
+
+    vendedores = [dict(fila) for fila in cursor.fetchall()]
+    conexion.close()
+    return jsonify(vendedores)
+
+
+@app.route("/api/vendedores", methods=["POST"])
+def crear_vendedor():
+    datos = request.json or {}
+
+    nombre = limpiar_texto(datos.get("nombre"))
+    usuario = limpiar_texto(datos.get("usuario"))
+    contrasena = limpiar_texto(datos.get("contrasena"))
+
+    if not nombre:
+        return jsonify({"mensaje": "El nombre del vendedor es obligatorio"}), 400
+
+    if not usuario:
+        return jsonify({"mensaje": "El usuario del vendedor es obligatorio"}), 400
+
+    if len(contrasena) < 4:
+        return jsonify({"mensaje": "La contraseña debe tener al menos 4 caracteres"}), 400
+
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    try:
+        cursor.execute("""
+            INSERT INTO usuarios (usuario, contrasena, rol, activo)
+            VALUES (?, ?, 'vendedor', 1)
+        """, (
+            usuario,
+            generate_password_hash(contrasena)
+        ))
+        usuario_id = cursor.lastrowid
+
+        fecha_alta = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute("""
+            INSERT INTO vendedores (
+                usuario_id, nombre, telefono, zona,
+                observaciones, activo, fecha_alta
+            )
+            VALUES (?, ?, ?, ?, ?, 1, ?)
+        """, (
+            usuario_id,
+            nombre,
+            limpiar_texto(datos.get("telefono")),
+            limpiar_texto(datos.get("zona")),
+            limpiar_texto(datos.get("observaciones")),
+            fecha_alta
+        ))
+
+        vendedor_id = cursor.lastrowid
+        conexion.commit()
+    except sqlite3.IntegrityError:
+        conexion.rollback()
+        conexion.close()
+        return jsonify({
+            "mensaje": "Ese nombre de usuario ya está en uso"
+        }), 409
+
+    conexion.close()
+    return jsonify({
+        "mensaje": "Vendedor creado correctamente",
+        "id": vendedor_id,
+        "usuario_id": usuario_id
+    }), 201
+
+
+@app.route("/api/vendedores/<int:vendedor_id>", methods=["PUT"])
+def actualizar_vendedor(vendedor_id):
+    datos = request.json or {}
+    nombre = limpiar_texto(datos.get("nombre"))
+    usuario = limpiar_texto(datos.get("usuario"))
+    contrasena = limpiar_texto(datos.get("contrasena"))
+    activo = 1 if datos.get("activo", True) else 0
+
+    if not nombre or not usuario:
+        return jsonify({
+            "mensaje": "Nombre y usuario son obligatorios"
+        }), 400
+
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT usuario_id
+        FROM vendedores
+        WHERE id = ?
+    """, (vendedor_id,))
+    vendedor = cursor.fetchone()
+
+    if not vendedor:
+        conexion.close()
+        return jsonify({"mensaje": "Vendedor no encontrado"}), 404
+
+    try:
+        cursor.execute("""
+            UPDATE vendedores
+            SET nombre = ?, telefono = ?, zona = ?,
+                observaciones = ?, activo = ?
+            WHERE id = ?
+        """, (
+            nombre,
+            limpiar_texto(datos.get("telefono")),
+            limpiar_texto(datos.get("zona")),
+            limpiar_texto(datos.get("observaciones")),
+            activo,
+            vendedor_id
+        ))
+
+        if contrasena:
+            cursor.execute("""
+                UPDATE usuarios
+                SET usuario = ?, contrasena = ?, activo = ?
+                WHERE id = ?
+            """, (
+                usuario,
+                generate_password_hash(contrasena),
+                activo,
+                vendedor["usuario_id"]
+            ))
+        else:
+            cursor.execute("""
+                UPDATE usuarios
+                SET usuario = ?, activo = ?
+                WHERE id = ?
+            """, (
+                usuario,
+                activo,
+                vendedor["usuario_id"]
+            ))
+
+        conexion.commit()
+    except sqlite3.IntegrityError:
+        conexion.rollback()
+        conexion.close()
+        return jsonify({
+            "mensaje": "Ese nombre de usuario ya está en uso"
+        }), 409
+
+    conexion.close()
+    return jsonify({"mensaje": "Vendedor actualizado correctamente"})
+
+
+@app.route("/api/vendedores/<int:vendedor_id>", methods=["DELETE"])
+def desactivar_vendedor(vendedor_id):
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT usuario_id
+        FROM vendedores
+        WHERE id = ?
+    """, (vendedor_id,))
+    vendedor = cursor.fetchone()
+
+    if not vendedor:
+        conexion.close()
+        return jsonify({"mensaje": "Vendedor no encontrado"}), 404
+
+    cursor.execute("""
+        UPDATE vendedores SET activo = 0 WHERE id = ?
+    """, (vendedor_id,))
+    cursor.execute("""
+        UPDATE usuarios SET activo = 0 WHERE id = ?
+    """, (vendedor["usuario_id"],))
+
+    conexion.commit()
+    conexion.close()
+
+    return jsonify({"mensaje": "Vendedor desactivado correctamente"})
+
+
+@app.route("/api/vendedores/por-usuario/<int:usuario_id>", methods=["GET"])
+def vendedor_por_usuario(usuario_id):
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT
+            v.id, v.nombre, v.telefono, v.zona,
+            v.observaciones, v.activo, u.usuario
+        FROM vendedores v
+        INNER JOIN usuarios u ON u.id = v.usuario_id
+        WHERE v.usuario_id = ?
+    """, (usuario_id,))
+
+    vendedor = cursor.fetchone()
+    conexion.close()
+
+    if not vendedor:
+        return jsonify({"mensaje": "Vendedor no encontrado"}), 404
+
+    return jsonify(dict(vendedor))
+
+
+@app.route("/api/vendedores/<int:vendedor_id>/stock-viaje", methods=["GET"])
+def obtener_stock_viaje(vendedor_id):
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT id FROM vendedores
+        WHERE id = ? AND activo = 1
+    """, (vendedor_id,))
+    if not cursor.fetchone():
+        conexion.close()
+        return jsonify({"mensaje": "Vendedor no encontrado o inactivo"}), 404
+
+    cursor.execute("""
+        SELECT
+            sv.id,
+            sv.vendedor_id,
+            sv.producto_id,
+            sv.cantidad,
+            sv.actualizado_en,
+            p.codigo,
+            p.nombre,
+            p.descripcion,
+            p.precio_venta,
+            p.stock AS stock_central,
+            pr.nombre AS proveedor
+        FROM stock_viaje sv
+        INNER JOIN productos p ON p.id = sv.producto_id
+        LEFT JOIN proveedores pr ON pr.id = p.proveedor_id
+        WHERE sv.vendedor_id = ?
+          AND sv.cantidad > 0
+        ORDER BY p.nombre ASC
+    """, (vendedor_id,))
+
+    stock = [dict(fila) for fila in cursor.fetchall()]
+    conexion.close()
+    return jsonify(stock)
+
+
+@app.route("/api/vendedores/<int:vendedor_id>/catalogo-visual", methods=["GET"])
+def obtener_catalogo_visual(vendedor_id):
+    """Catálogo para mostrar al cliente durante la venta ambulante.
+
+    La respuesta excluye precios, costos, proveedores y cantidades internas.
+    Solo informa si cada producto está disponible en el stock móvil del
+    vendedor indicado.
+    """
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT id, nombre, activo
+        FROM vendedores
+        WHERE id = ?
+    """, (vendedor_id,))
+    vendedor = cursor.fetchone()
+
+    if not vendedor or not vendedor["activo"]:
+        conexion.close()
+        return jsonify({
+            "mensaje": "Vendedor no encontrado o inactivo"
+        }), 404
+
+    cursor.execute("""
+        SELECT
+            p.id,
+            p.codigo,
+            p.nombre,
+            p.descripcion,
+            p.categoria,
+            p.foto,
+            COALESCE(sv.cantidad, 0) AS cantidad_viaje
+        FROM productos p
+        LEFT JOIN stock_viaje sv
+          ON sv.producto_id = p.id
+         AND sv.vendedor_id = ?
+        ORDER BY p.nombre COLLATE NOCASE ASC, p.id ASC
+    """, (vendedor_id,))
+    productos = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT
+            id,
+            producto_id,
+            nombre_variante,
+            codigo
+        FROM producto_variantes
+        WHERE activo = 1
+        ORDER BY producto_id ASC, nombre_variante COLLATE NOCASE ASC, id ASC
+    """)
+
+    variantes_por_producto = {}
+    for variante in cursor.fetchall():
+        producto_id = variante["producto_id"]
+        variantes_por_producto.setdefault(producto_id, []).append({
+            "id": variante["id"],
+            "nombre_variante": variante["nombre_variante"],
+            "codigo": variante["codigo"]
+        })
+
+    catalogo = []
+    for producto in productos:
+        catalogo.append({
+            "id": producto["id"],
+            "codigo": producto["codigo"] or "",
+            "nombre": producto["nombre"],
+            "descripcion": producto["descripcion"] or "",
+            "categoria": producto["categoria"] or "Sin categoría",
+            "foto": producto["foto"] or "",
+            "disponible": int(producto["cantidad_viaje"] or 0) > 0,
+            "variantes": variantes_por_producto.get(producto["id"], [])
+        })
+
+    conexion.close()
+
+    respuesta = jsonify({
+        "vendedor_id": vendedor["id"],
+        "vendedor": vendedor["nombre"],
+        "actualizado_en": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "productos": catalogo
+    })
+    respuesta.headers["Cache-Control"] = "no-store"
+    return respuesta
+
+
+@app.route("/api/vendedores/<int:vendedor_id>/stock-viaje/asignar", methods=["POST"])
+def asignar_stock_viaje(vendedor_id):
+    datos = request.json or {}
+
+    try:
+        producto_id = int(datos.get("producto_id"))
+        cantidad = int(datos.get("cantidad"))
+    except (TypeError, ValueError):
+        return jsonify({
+            "mensaje": "Producto y cantidad son obligatorios"
+        }), 400
+
+    if cantidad <= 0:
+        return jsonify({"mensaje": "La cantidad debe ser mayor a cero"}), 400
+
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    try:
+        cursor.execute("""
+            SELECT id FROM vendedores
+            WHERE id = ? AND activo = 1
+        """, (vendedor_id,))
+        if not cursor.fetchone():
+            conexion.close()
+            return jsonify({"mensaje": "Vendedor no encontrado o inactivo"}), 404
+
+        cursor.execute("""
+            SELECT id, nombre, stock
+            FROM productos
+            WHERE id = ?
+        """, (producto_id,))
+        producto = cursor.fetchone()
+
+        if not producto:
+            conexion.close()
+            return jsonify({"mensaje": "Producto no encontrado"}), 404
+
+        stock_central = int(producto["stock"] or 0)
+
+        if stock_central < cantidad:
+            conexion.close()
+            return jsonify({
+                "mensaje": (
+                    f"Stock central insuficiente. Disponible: {stock_central}"
+                )
+            }), 400
+
+        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        nuevo_stock_central = stock_central - cantidad
+
+        cursor.execute("""
+            SELECT id, cantidad
+            FROM stock_viaje
+            WHERE vendedor_id = ? AND producto_id = ?
+        """, (vendedor_id, producto_id))
+        registro = cursor.fetchone()
+
+        if registro:
+            nuevo_stock_viaje = int(registro["cantidad"] or 0) + cantidad
+            cursor.execute("""
+                UPDATE stock_viaje
+                SET cantidad = ?, actualizado_en = ?
+                WHERE id = ?
+            """, (
+                nuevo_stock_viaje,
+                fecha,
+                registro["id"]
+            ))
+        else:
+            nuevo_stock_viaje = cantidad
+            cursor.execute("""
+                INSERT INTO stock_viaje (
+                    vendedor_id, producto_id, cantidad, actualizado_en
+                )
+                VALUES (?, ?, ?, ?)
+            """, (
+                vendedor_id,
+                producto_id,
+                cantidad,
+                fecha
+            ))
+
+        cursor.execute("""
+            UPDATE productos
+            SET stock = ?
+            WHERE id = ?
+        """, (nuevo_stock_central, producto_id))
+
+        cursor.execute("""
+            INSERT INTO movimientos_stock_viaje (
+                vendedor_id, producto_id, fecha, tipo, cantidad,
+                descripcion, stock_viaje_resultante, stock_central_resultante
+            )
+            VALUES (?, ?, ?, 'Carga', ?, ?, ?, ?)
+        """, (
+            vendedor_id,
+            producto_id,
+            fecha,
+            cantidad,
+            limpiar_texto(datos.get("descripcion")) or "Carga de mercadería",
+            nuevo_stock_viaje,
+            nuevo_stock_central
+        ))
+
+        cursor.execute("""
+            INSERT INTO movimientos_stock (
+                producto_id, fecha, tipo, cantidad, descripcion, stock_resultante
+            )
+            VALUES (?, ?, 'Salida a viaje', ?, ?, ?)
+        """, (
+            producto_id,
+            fecha,
+            -cantidad,
+            f"Mercadería asignada al vendedor #{vendedor_id}",
+            nuevo_stock_central
+        ))
+
+        conexion.commit()
+    except Exception:
+        conexion.rollback()
+        conexion.close()
+        raise
+
+    conexion.close()
+    return jsonify({
+        "mensaje": "Mercadería asignada al stock en viaje",
+        "stock_viaje": nuevo_stock_viaje,
+        "stock_central": nuevo_stock_central
+    }), 201
+
+
+@app.route("/api/vendedores/<int:vendedor_id>/stock-viaje/devolver", methods=["POST"])
+def devolver_stock_viaje(vendedor_id):
+    datos = request.json or {}
+
+    try:
+        producto_id = int(datos.get("producto_id"))
+        cantidad = int(datos.get("cantidad"))
+    except (TypeError, ValueError):
+        return jsonify({
+            "mensaje": "Producto y cantidad son obligatorios"
+        }), 400
+
+    if cantidad <= 0:
+        return jsonify({"mensaje": "La cantidad debe ser mayor a cero"}), 400
+
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT cantidad
+        FROM stock_viaje
+        WHERE vendedor_id = ? AND producto_id = ?
+    """, (vendedor_id, producto_id))
+    registro = cursor.fetchone()
+
+    if not registro or int(registro["cantidad"] or 0) < cantidad:
+        conexion.close()
+        return jsonify({
+            "mensaje": "El vendedor no tiene esa cantidad para devolver"
+        }), 400
+
+    cursor.execute("""
+        SELECT stock
+        FROM productos
+        WHERE id = ?
+    """, (producto_id,))
+    producto = cursor.fetchone()
+
+    if not producto:
+        conexion.close()
+        return jsonify({"mensaje": "Producto no encontrado"}), 404
+
+    stock_viaje_actual = int(registro["cantidad"] or 0)
+    stock_central_actual = int(producto["stock"] or 0)
+    nuevo_stock_viaje = stock_viaje_actual - cantidad
+    nuevo_stock_central = stock_central_actual + cantidad
+    fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.execute("""
+        UPDATE stock_viaje
+        SET cantidad = ?, actualizado_en = ?
+        WHERE vendedor_id = ? AND producto_id = ?
+    """, (
+        nuevo_stock_viaje,
+        fecha,
+        vendedor_id,
+        producto_id
+    ))
+
+    cursor.execute("""
+        UPDATE productos
+        SET stock = ?
+        WHERE id = ?
+    """, (nuevo_stock_central, producto_id))
+
+    cursor.execute("""
+        INSERT INTO movimientos_stock_viaje (
+            vendedor_id, producto_id, fecha, tipo, cantidad,
+            descripcion, stock_viaje_resultante, stock_central_resultante
+        )
+        VALUES (?, ?, ?, 'Devolución', ?, ?, ?, ?)
+    """, (
+        vendedor_id,
+        producto_id,
+        fecha,
+        -cantidad,
+        limpiar_texto(datos.get("descripcion")) or "Devolución a depósito",
+        nuevo_stock_viaje,
+        nuevo_stock_central
+    ))
+
+    cursor.execute("""
+        INSERT INTO movimientos_stock (
+            producto_id, fecha, tipo, cantidad, descripcion, stock_resultante
+        )
+        VALUES (?, ?, 'Retorno de viaje', ?, ?, ?)
+    """, (
+        producto_id,
+        fecha,
+        cantidad,
+        f"Devolución del vendedor #{vendedor_id}",
+        nuevo_stock_central
+    ))
+
+    conexion.commit()
+    conexion.close()
+
+    return jsonify({
+        "mensaje": "Mercadería devuelta correctamente",
+        "stock_viaje": nuevo_stock_viaje,
+        "stock_central": nuevo_stock_central
+    })
+
+
+@app.route("/api/vendedores/<int:vendedor_id>/stock-viaje/movimientos", methods=["GET"])
+def listar_movimientos_stock_viaje(vendedor_id):
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT
+            m.*,
+            p.codigo,
+            p.nombre AS producto
+        FROM movimientos_stock_viaje m
+        INNER JOIN productos p ON p.id = m.producto_id
+        WHERE m.vendedor_id = ?
+        ORDER BY m.id DESC
+        LIMIT 200
+    """, (vendedor_id,))
+
+    movimientos = [dict(fila) for fila in cursor.fetchall()]
+    conexion.close()
+    return jsonify(movimientos)
+
+
+def _consultar_ventas(cursor, vendedor_id=None):
+    parametros = []
+    condicion = ""
+
+    if vendedor_id is not None:
+        condicion = "WHERE ve.vendedor_id = ?"
+        parametros.append(vendedor_id)
+
+    cursor.execute(f"""
+        SELECT
+            ve.id,
+            ve.vendedor_id,
+            ve.cliente_id,
+            ve.fecha,
+            ve.forma_pago,
+            ve.total,
+            ve.observaciones,
+            v.nombre AS vendedor,
+            c.nombre AS cliente,
+            c.numero_cliente
+        FROM ventas ve
+        INNER JOIN vendedores v ON v.id = ve.vendedor_id
+        LEFT JOIN clientes c ON c.id = ve.cliente_id
+        {condicion}
+        ORDER BY ve.id DESC
+        LIMIT 300
+    """, parametros)
+
+    ventas = [dict(fila) for fila in cursor.fetchall()]
+
+    for venta in ventas:
+        cursor.execute("""
+            SELECT
+                vd.id,
+                vd.producto_id,
+                vd.cantidad,
+                vd.precio_unitario,
+                vd.subtotal,
+                p.codigo,
+                p.nombre AS producto
+            FROM venta_detalles vd
+            INNER JOIN productos p ON p.id = vd.producto_id
+            WHERE vd.venta_id = ?
+            ORDER BY vd.id ASC
+        """, (venta["id"],))
+        venta["detalles"] = [dict(fila) for fila in cursor.fetchall()]
+
+    return ventas
+
+
+@app.route("/api/ventas", methods=["GET"])
+def listar_ventas():
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+    ventas = _consultar_ventas(cursor)
+    conexion.close()
+    return jsonify(ventas)
+
+
+@app.route("/api/vendedores/<int:vendedor_id>/ventas", methods=["GET"])
+def listar_ventas_vendedor(vendedor_id):
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+    ventas = _consultar_ventas(cursor, vendedor_id)
+    conexion.close()
+    return jsonify(ventas)
+
+
+@app.route("/api/vendedores/<int:vendedor_id>/ventas", methods=["POST"])
+def registrar_venta_vendedor(vendedor_id):
+    datos = request.json or {}
+    items = datos.get("items") or []
+    forma_pago = limpiar_texto(datos.get("forma_pago"))
+    observaciones = limpiar_texto(datos.get("observaciones"))
+
+    cliente_id = datos.get("cliente_id")
+    if cliente_id in ("", None):
+        cliente_id = None
+    else:
+        try:
+            cliente_id = int(cliente_id)
+        except (TypeError, ValueError):
+            return jsonify({"mensaje": "Cliente inválido"}), 400
+
+    if not forma_pago:
+        return jsonify({"mensaje": "La forma de pago es obligatoria"}), 400
+
+    if not isinstance(items, list) or len(items) == 0:
+        return jsonify({"mensaje": "La venta debe tener al menos un producto"}), 400
+
+    es_cuenta_corriente = forma_pago.strip().lower() == "cuenta corriente"
+
+    if cliente_id is None:
+        return jsonify({
+            "mensaje": "Seleccioná un cliente para registrar la venta"
+        }), 400
+
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    try:
+        cursor.execute("""
+            SELECT id, nombre
+            FROM vendedores
+            WHERE id = ? AND activo = 1
+        """, (vendedor_id,))
+        vendedor = cursor.fetchone()
+
+        if not vendedor:
+            conexion.close()
+            return jsonify({"mensaje": "Vendedor no encontrado o inactivo"}), 404
+
+        cliente = None
+        if cliente_id is not None:
+            cursor.execute("""
+                SELECT id, nombre, saldo_actual
+                FROM clientes
+                WHERE id = ?
+            """, (cliente_id,))
+            cliente = cursor.fetchone()
+
+            if not cliente:
+                conexion.close()
+                return jsonify({"mensaje": "Cliente no encontrado"}), 404
+
+        detalles_preparados = []
+        total = 0.0
+
+        for item in items:
+            try:
+                producto_id = int(item.get("producto_id"))
+                cantidad = int(item.get("cantidad"))
+            except (TypeError, ValueError, AttributeError):
+                conexion.close()
+                return jsonify({"mensaje": "Hay un producto inválido en la venta"}), 400
+
+            if cantidad <= 0:
+                conexion.close()
+                return jsonify({"mensaje": "Las cantidades deben ser mayores a cero"}), 400
+
+            cursor.execute("""
+                SELECT
+                    sv.cantidad AS stock_viaje,
+                    p.id,
+                    p.codigo,
+                    p.nombre,
+                    p.precio_venta
+                FROM stock_viaje sv
+                INNER JOIN productos p ON p.id = sv.producto_id
+                WHERE sv.vendedor_id = ?
+                  AND sv.producto_id = ?
+            """, (vendedor_id, producto_id))
+            producto = cursor.fetchone()
+
+            if not producto:
+                conexion.close()
+                return jsonify({
+                    "mensaje": "Uno de los productos no pertenece al stock en viaje"
+                }), 400
+
+            stock_disponible = int(producto["stock_viaje"] or 0)
+
+            if stock_disponible < cantidad:
+                conexion.close()
+                return jsonify({
+                    "mensaje": (
+                        f"Stock insuficiente de {producto['nombre']}. "
+                        f"Disponible: {stock_disponible}"
+                    )
+                }), 400
+
+            precio_unitario = round(float(producto["precio_venta"] or 0), 2)
+            subtotal = round(precio_unitario * cantidad, 2)
+            total = round(total + subtotal, 2)
+
+            detalles_preparados.append({
+                "producto_id": producto_id,
+                "cantidad": cantidad,
+                "precio_unitario": precio_unitario,
+                "subtotal": subtotal,
+                "stock_anterior": stock_disponible,
+                "nombre": producto["nombre"]
+            })
+
+        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        cursor.execute("""
+            INSERT INTO ventas (
+                vendedor_id, cliente_id, fecha,
+                forma_pago, total, observaciones
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            vendedor_id,
+            cliente_id,
+            fecha,
+            forma_pago,
+            total,
+            observaciones
+        ))
+        venta_id = cursor.lastrowid
+
+        for detalle in detalles_preparados:
+            nuevo_stock_viaje = detalle["stock_anterior"] - detalle["cantidad"]
+
+            cursor.execute("""
+                INSERT INTO venta_detalles (
+                    venta_id, producto_id, cantidad,
+                    precio_unitario, subtotal
+                )
+                VALUES (?, ?, ?, ?, ?)
+            """, (
+                venta_id,
+                detalle["producto_id"],
+                detalle["cantidad"],
+                detalle["precio_unitario"],
+                detalle["subtotal"]
+            ))
+
+            cursor.execute("""
+                UPDATE stock_viaje
+                SET cantidad = ?, actualizado_en = ?
+                WHERE vendedor_id = ? AND producto_id = ?
+            """, (
+                nuevo_stock_viaje,
+                fecha,
+                vendedor_id,
+                detalle["producto_id"]
+            ))
+
+            cursor.execute("""
+                SELECT stock FROM productos WHERE id = ?
+            """, (detalle["producto_id"],))
+            stock_central = int(cursor.fetchone()["stock"] or 0)
+
+            cursor.execute("""
+                INSERT INTO movimientos_stock_viaje (
+                    vendedor_id, producto_id, fecha, tipo, cantidad,
+                    descripcion, stock_viaje_resultante, stock_central_resultante
+                )
+                VALUES (?, ?, ?, 'Venta', ?, ?, ?, ?)
+            """, (
+                vendedor_id,
+                detalle["producto_id"],
+                fecha,
+                -detalle["cantidad"],
+                f"Venta #{venta_id}",
+                nuevo_stock_viaje,
+                stock_central
+            ))
+
+        if es_cuenta_corriente and cliente is not None:
+            saldo_anterior = float(cliente["saldo_actual"] or 0)
+            nuevo_saldo = round(saldo_anterior + total, 2)
+
+            cursor.execute("""
+                INSERT INTO cuentas_corrientes (
+                    cliente_id, fecha, tipo, descripcion, comprobante,
+                    debe, haber, saldo, medio_pago
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                cliente_id,
+                fecha,
+                "Venta vendedor",
+                f"Venta #{venta_id} - {vendedor['nombre']}",
+                str(venta_id),
+                total,
+                0,
+                nuevo_saldo,
+                "Cuenta corriente"
+            ))
+
+            cursor.execute("""
+                UPDATE clientes
+                SET saldo_actual = ?
+                WHERE id = ?
+            """, (nuevo_saldo, cliente_id))
+
+        conexion.commit()
+    except Exception:
+        conexion.rollback()
+        conexion.close()
+        raise
+
+    conexion.close()
+
+    return jsonify({
+        "mensaje": "Venta registrada correctamente",
+        "venta_id": venta_id,
+        "total": total
+    }), 201
+
+
 @app.route("/api/importar-catalogo", methods=["POST"])
 def importar_catalogo():
     if "archivo" not in request.files:
@@ -1719,5 +2731,6 @@ if __name__ == "__main__":
     cargar_datos_iniciales()
     app.run(
         debug=os.environ.get("FLASK_DEBUG", "0") == "1",
+        host=os.environ.get("ALMADA2_HOST", "0.0.0.0"),
         port=int(os.environ.get("PORT", "5000"))
     )

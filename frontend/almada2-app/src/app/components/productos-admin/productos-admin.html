@@ -19,6 +19,17 @@
     <strong>{{ resumen.stock_bajo }}</strong>
   </div>
 
+  <div class="card">
+    <span>Vendedores activos</span>
+    <strong>{{ resumen.vendedores || 0 }}</strong>
+  </div>
+
+  <div class="card">
+    <span>Unidades en viaje</span>
+    <strong>{{ resumen.unidades_en_viaje || 0 }}</strong>
+  </div>
+
+
   <div class="card warning">
     <span>Saldo clientes</span>
     <strong>

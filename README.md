@@ -38,6 +38,20 @@ npm start
 El frontend se abre normalmente en `http://localhost:4200` y el backend en
 `http://127.0.0.1:5000`.
 
+### Uso en dos dispositivos
+
+Para usar la vista de venta en un dispositivo y el catálogo visual en una
+tablet conectada a la misma red Wi-Fi, iniciar el frontend con:
+
+```powershell
+npm run start:lan
+```
+
+Luego consultar la dirección IPv4 de la computadora con `ipconfig` y abrir en
+la tablet `http://IP-DE-LA-COMPUTADORA:4200`. Los dos dispositivos deben iniciar
+sesión con el mismo usuario vendedor. Si Windows solicita permiso de red para
+Python o Node.js, habilitar únicamente las redes privadas.
+
 Si se inicia solamente para desarrollo sin definir variables, el acceso inicial
 es `admin` / `almada2-dev`. Debe reemplazarse antes de usar el sistema fuera de
 la computadora local.
