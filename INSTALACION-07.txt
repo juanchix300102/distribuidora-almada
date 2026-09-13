@@ -1,0 +1,15 @@
+ALMADA 2 - ACTUALIZACION 07 - SIN IMPORTAR/CARGAR CATALOGO
+
+1. Hacer un commit de respaldo:
+   git add .
+   git commit -m "Version estable antes de eliminar importador de catalogo"
+
+2. Descomprimir este ZIP sobre la raiz de Almada 2 y reemplazar archivos.
+
+3. Desde la raiz del proyecto ejecutar:
+   powershell -ExecutionPolicy Bypass -File .\LIMPIEZA-IMPORTADOR-07.ps1
+
+4. Levantar backend y frontend normalmente.
+
+Se eliminan solamente las herramientas de importacion masiva.
+Se mantienen Productos, Proveedores y Catalogo visual.

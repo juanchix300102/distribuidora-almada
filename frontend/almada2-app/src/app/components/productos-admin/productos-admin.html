@@ -1,50 +1,3 @@
-<section class="cards" *ngIf="resumen">
-  <div class="card">
-    <span>Productos cargados</span>
-    <strong>{{ resumen.productos_cargados }}</strong>
-  </div>
-
-  <div class="card">
-    <span>Proveedores</span>
-    <strong>{{ resumen.proveedores }}</strong>
-  </div>
-
-  <div class="card">
-    <span>Clientes</span>
-    <strong>{{ resumen.clientes }}</strong>
-  </div>
-
-  <div class="card warning">
-    <span>Stock bajo</span>
-    <strong>{{ resumen.stock_bajo }}</strong>
-  </div>
-
-  <div class="card">
-    <span>Vendedores activos</span>
-    <strong>{{ resumen.vendedores || 0 }}</strong>
-  </div>
-
-  <div class="card">
-    <span>Unidades en viaje</span>
-    <strong>{{ resumen.unidades_en_viaje || 0 }}</strong>
-  </div>
-
-
-  <div class="card warning">
-    <span>Saldo clientes</span>
-    <strong>
-      ${{ formatearMoneda(resumen.saldo_clientes) }}
-    </strong>
-  </div>
-
-  <div class="card success">
-    <span>Ventas del mes</span>
-    <strong>
-      ${{ formatearMoneda(resumen.ventas_mes) }}
-    </strong>
-  </div>
-</section>
-
 <section *ngIf="error" class="error">
   {{ error }}
 </section>
@@ -423,14 +376,6 @@
         [(ngModel)]="busqueda"
         name="busqueda"
       />
-
-      <button
-        type="button"
-        class="btn-aumentos"
-        (click)="abrirAumentos.emit()"
-      >
-        ↗ Aumentar precios
-      </button>
 
       <button
         type="button"

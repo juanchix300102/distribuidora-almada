@@ -1,5 +1,4 @@
 import os
-import io
 import tempfile
 import unittest
 from pathlib import Path
@@ -128,24 +127,6 @@ class Almada2SmokeTest(unittest.TestCase):
             json=payload
         )
         self.assertEqual(updated.status_code, 200)
-
-    def test_csv_import_without_reventa_column(self):
-        csv_content = (
-            "Proveedor;Código;Producto;Precio venta;Stock\n"
-            "Proveedor CSV;CSV-001;Producto CSV;2500;5\n"
-        ).encode("utf-8")
-
-        response = self.client.post(
-            "/api/importar-catalogo",
-            data={
-                "tipo_importacion": "catalogo_completo",
-                "archivo": (io.BytesIO(csv_content), "catalogo.csv")
-            },
-            content_type="multipart/form-data"
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()["productos_creados"], 1)
 
 
     def test_price_increases_round_up_to_ten_and_keep_history(self):

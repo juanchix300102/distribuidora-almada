@@ -1,12 +1,5 @@
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectorRef,
-  Component,
-  EventEmitter,
-  OnInit,
-  Output,
-  inject
-} from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { ApiService } from '../../services/api.service';
@@ -22,72 +15,39 @@ export class VendedoresComponent implements OnInit {
   private api = inject(ApiService);
   private cdr = inject(ChangeDetectorRef);
 
-  @Output() resumenActualizado = new EventEmitter<void>();
-
   vendedores: any[] = [];
-  productos: any[] = [];
-  stockViaje: any[] = [];
-  movimientos: any[] = [];
-  ventas: any[] = [];
-
-  vendedorSeleccionado: any = null;
   error = '';
   cargando = false;
   mostrarFormulario = false;
   editandoId: number | null = null;
-  filtroProducto = '';
 
-  vendedorForm: any = {
-    nombre: '',
-    usuario: '',
-    contrasena: '',
-    telefono: '',
-    zona: '',
-    observaciones: '',
-    activo: true
-  };
-
-  asignacionForm: any = {
-    producto_id: '',
-    cantidad: 1,
-    descripcion: ''
-  };
-
-  devoluciones: Record<number, number> = {};
+  vendedorForm: any = this.vendedorVacio();
 
   ngOnInit(): void {
-    this.cargarTodo();
+    this.cargarVendedores();
   }
 
-  cargarTodo(): void {
+  vendedorVacio(): any {
+    return {
+      nombre: '',
+      usuario: '',
+      contrasena: '',
+      telefono: '',
+      zona: '',
+      observaciones: '',
+      activo: true
+    };
+  }
+
+  cargarVendedores(): void {
     this.cargando = true;
     this.error = '';
 
     this.api.obtenerVendedores().subscribe({
       next: (vendedores) => {
         this.vendedores = vendedores || [];
-        this.api.obtenerProductos().subscribe({
-          next: (productos) => {
-            this.productos = productos || [];
-            this.api.obtenerVentas().subscribe({
-              next: (ventas) => {
-                this.ventas = ventas || [];
-                this.cargando = false;
-                this.cdr.detectChanges();
-              },
-              error: () => {
-                this.ventas = [];
-                this.cargando = false;
-                this.cdr.detectChanges();
-              }
-            });
-          },
-          error: () => {
-            this.error = 'No se pudieron cargar los productos.';
-            this.cargando = false;
-            this.cdr.detectChanges();
-          }
-        });
+        this.cargando = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.error = 'No se pudieron cargar los vendedores.';
@@ -100,15 +60,7 @@ export class VendedoresComponent implements OnInit {
   abrirNuevo(): void {
     this.mostrarFormulario = true;
     this.editandoId = null;
-    this.vendedorForm = {
-      nombre: '',
-      usuario: '',
-      contrasena: '',
-      telefono: '',
-      zona: '',
-      observaciones: '',
-      activo: true
-    };
+    this.vendedorForm = this.vendedorVacio();
     this.cdr.detectChanges();
   }
 
@@ -130,6 +82,7 @@ export class VendedoresComponent implements OnInit {
   cerrarFormulario(): void {
     this.mostrarFormulario = false;
     this.editandoId = null;
+    this.vendedorForm = this.vendedorVacio();
   }
 
   guardar(): void {
@@ -156,9 +109,9 @@ export class VendedoresComponent implements OnInit {
       next: () => {
         this.mostrarFormulario = false;
         this.editandoId = null;
+        this.vendedorForm = this.vendedorVacio();
         this.error = '';
-        this.cargarTodo();
-        this.resumenActualizado.emit();
+        this.cargarVendedores();
       },
       error: (error) => {
         this.error = error.error?.mensaje || 'No se pudo guardar el vendedor.';
@@ -173,15 +126,7 @@ export class VendedoresComponent implements OnInit {
     }
 
     this.api.desactivarVendedor(vendedor.id).subscribe({
-      next: () => {
-        if (this.vendedorSeleccionado?.id === vendedor.id) {
-          this.vendedorSeleccionado = null;
-          this.stockViaje = [];
-          this.movimientos = [];
-        }
-        this.cargarTodo();
-        this.resumenActualizado.emit();
-      },
+      next: () => this.cargarVendedores(),
       error: (error) => {
         this.error = error.error?.mensaje || 'No se pudo desactivar el vendedor.';
         this.cdr.detectChanges();
@@ -189,144 +134,7 @@ export class VendedoresComponent implements OnInit {
     });
   }
 
-  seleccionarVendedor(vendedor: any): void {
-    this.vendedorSeleccionado = vendedor;
-    this.cargarStockSeleccionado();
-  }
-
-  cargarStockSeleccionado(): void {
-    if (!this.vendedorSeleccionado?.id) {
-      return;
-    }
-
-    const vendedorId = this.vendedorSeleccionado.id;
-    this.error = '';
-
-    this.api.obtenerStockViaje(vendedorId).subscribe({
-      next: (stock) => {
-        this.stockViaje = stock || [];
-        this.devoluciones = {};
-        this.api.obtenerMovimientosStockViaje(vendedorId).subscribe({
-          next: (movimientos) => {
-            this.movimientos = movimientos || [];
-            this.cdr.detectChanges();
-          },
-          error: () => {
-            this.movimientos = [];
-            this.cdr.detectChanges();
-          }
-        });
-      },
-      error: (error) => {
-        this.error = error.error?.mensaje || 'No se pudo cargar el stock en viaje.';
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  asignarStock(): void {
-    if (!this.vendedorSeleccionado?.id) {
-      this.error = 'Seleccioná un vendedor.';
-      return;
-    }
-
-    const productoId = Number(this.asignacionForm.producto_id || 0);
-    const cantidad = Number(this.asignacionForm.cantidad || 0);
-
-    if (!productoId || cantidad <= 0) {
-      this.error = 'Seleccioná un producto e ingresá una cantidad válida.';
-      return;
-    }
-
-    this.api.asignarStockViaje(this.vendedorSeleccionado.id, {
-      producto_id: productoId,
-      cantidad,
-      descripcion: this.asignacionForm.descripcion
-    }).subscribe({
-      next: () => {
-        this.asignacionForm = {
-          producto_id: '',
-          cantidad: 1,
-          descripcion: ''
-        };
-        this.cargarStockSeleccionado();
-        this.api.obtenerProductos().subscribe({
-          next: (productos) => {
-            this.productos = productos || [];
-            this.resumenActualizado.emit();
-            this.cdr.detectChanges();
-          }
-        });
-      },
-      error: (error) => {
-        this.error = error.error?.mensaje || 'No se pudo asignar la mercadería.';
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  devolver(item: any): void {
-    const cantidad = Number(this.devoluciones[item.producto_id] || 0);
-
-    if (cantidad <= 0) {
-      this.error = 'Ingresá una cantidad para devolver.';
-      return;
-    }
-
-    this.api.devolverStockViaje(this.vendedorSeleccionado.id, {
-      producto_id: item.producto_id,
-      cantidad
-    }).subscribe({
-      next: () => {
-        this.cargarStockSeleccionado();
-        this.api.obtenerProductos().subscribe({
-          next: (productos) => {
-            this.productos = productos || [];
-            this.resumenActualizado.emit();
-            this.cdr.detectChanges();
-          }
-        });
-      },
-      error: (error) => {
-        this.error = error.error?.mensaje || 'No se pudo registrar la devolución.';
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  get productosFiltrados(): any[] {
-    const filtro = this.filtroProducto.trim().toLowerCase();
-
-    const disponibles = this.productos.filter((producto) => Number(producto.stock || 0) > 0);
-
-    if (!filtro) {
-      return disponibles.slice(0, 120);
-    }
-
-    return disponibles
-      .filter((producto) => {
-        const texto = `${producto.codigo || ''} ${producto.nombre || ''} ${producto.proveedor || ''}`.toLowerCase();
-        return texto.includes(filtro);
-      })
-      .slice(0, 120);
-  }
-
-  get ventasSeleccionadas(): any[] {
-    if (!this.vendedorSeleccionado?.id) {
-      return [];
-    }
-
-    return this.ventas.filter((venta) => venta.vendedor_id === this.vendedorSeleccionado.id);
-  }
-
-  get totalUnidadesViaje(): number {
-    return this.stockViaje.reduce((total, item) => total + Number(item.cantidad || 0), 0);
-  }
-
-  formatearMoneda(valor: any): string {
-    return Number(valor || 0).toLocaleString('es-AR', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    });
+  get vendedoresActivos(): number {
+    return this.vendedores.filter((vendedor) => Boolean(vendedor.activo)).length;
   }
 }

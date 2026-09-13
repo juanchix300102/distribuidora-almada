@@ -13,19 +13,12 @@
 
 <div
   class="layout"
-  *ngIf="
-    autenticado &&
-    vista !== 'login' &&
-    vista !== 'catalogo-visual'
-  "
+  *ngIf="autenticado && vista !== 'login' && vista !== 'catalogo-visual'"
 >
   <aside class="sidebar">
     <div class="brand">
       <div class="brand-logo">
-        <img
-          src="logo-distribuidora-almada.jpeg"
-          alt="Distribuidora Almada"
-        />
+        <img src="logo-distribuidora-almada.jpeg" alt="Distribuidora Almada" />
       </div>
 
       <div class="brand-texto">
@@ -35,77 +28,49 @@
     </div>
 
     <nav *ngIf="rolActual === 'admin'">
-      <div class="nav-separador nav-separador-principal">
-        Administración
-      </div>
+      <div class="nav-separador nav-separador-principal">Administración</div>
 
-      <a
-        [class.active]="vista === 'panel'"
-        (click)="cambiarVista('panel')"
-      >
-        <span class="nav-contenido">
-          <span class="nav-icono" aria-hidden="true">⌂</span>
-          Panel
-        </span>
+      <a [class.active]="vista === 'panel'" (click)="cambiarVista('panel')">
+        <span class="nav-contenido"><span class="nav-icono" aria-hidden="true">⌂</span>Panel</span>
+      </a>
+
+      <a [class.active]="vista === 'productos'" (click)="cambiarVista('productos')">
+        <span class="nav-contenido"><span class="nav-icono" aria-hidden="true">□</span>Productos</span>
+      </a>
+<a [class.active]="vista === 'proveedores'" (click)="cambiarVista('proveedores')">
+        <span class="nav-contenido"><span class="nav-icono" aria-hidden="true">▦</span>Proveedores</span>
+      </a>
+
+      <a [class.active]="vista === 'aumentos-precios'" (click)="cambiarVista('aumentos-precios')">
+        <span class="nav-contenido"><span class="nav-icono" aria-hidden="true">↗</span>Aumentos de precios</span>
+      </a>
+
+      <a [class.active]="vista === 'clientes'" (click)="cambiarVista('clientes')">
+        <span class="nav-contenido"><span class="nav-icono" aria-hidden="true">◎</span>Clientes</span>
       </a>
 
       <a
-        [class.active]="vista === 'proveedores'"
-        (click)="cambiarVista('proveedores')"
-      >
-        <span class="nav-contenido">
-          <span class="nav-icono" aria-hidden="true">▦</span>
-          Proveedores
-        </span>
-      </a>
-
-      <a
-        [class.active]="vista === 'clientes'"
-        (click)="cambiarVista('clientes')"
-      >
-        <span class="nav-contenido">
-          <span class="nav-icono" aria-hidden="true">◎</span>
-          Clientes
-        </span>
-      </a>
-
-      <a
-        [class.active]="
-          vista === 'cuenta-corriente-lista' ||
-          vista === 'cuenta-corriente'
-        "
+        [class.active]="vista === 'cuenta-corriente-lista' || vista === 'cuenta-corriente'"
         (click)="cambiarVista('cuenta-corriente-lista')"
       >
-        <span class="nav-contenido">
-          <span class="nav-icono" aria-hidden="true">$</span>
-          Cuenta corriente
-        </span>
+        <span class="nav-contenido"><span class="nav-icono" aria-hidden="true">$</span>Cuenta corriente</span>
       </a>
 
       <div class="nav-separador">Venta ambulante</div>
 
-      <a
-        [class.active]="vista === 'catalogo-visual'"
-        (click)="cambiarVista('catalogo-visual')"
-      >
-        <span class="nav-contenido">
-          <span class="nav-icono" aria-hidden="true">▧</span>
-          Catálogo visual
-        </span>
+      <a [class.active]="vista === 'vendedores'" (click)="cambiarVista('vendedores')">
+        <span class="nav-contenido"><span class="nav-icono" aria-hidden="true">◉</span>Vendedores</span>
       </a>
 
-      <a
-        [class.active]="vista === 'vendedores'"
-        (click)="cambiarVista('vendedores')"
-      >
-        <span class="nav-contenido">
-          <span class="nav-icono" aria-hidden="true">⇄</span>
-          Vendedores y viajes
-        </span>
+      <a [class.active]="vista === 'stock-viaje'" (click)="cambiarVista('stock-viaje')">
+        <span class="nav-contenido"><span class="nav-icono" aria-hidden="true">⇄</span>Stock en viaje</span>
+      </a>
+
+      <a [class.active]="vista === 'catalogo-visual'" (click)="cambiarVista('catalogo-visual')">
+        <span class="nav-contenido"><span class="nav-icono" aria-hidden="true">▧</span>Catálogo visual</span>
       </a>
 
       <div class="nav-separador">Próximamente</div>
-
       <a class="disabled">Gastos</a>
       <a class="disabled">Saldos</a>
       <a class="disabled">Reportes</a>
@@ -114,24 +79,12 @@
     <nav *ngIf="rolActual === 'vendedor'">
       <div class="nav-separador nav-separador-principal">Mi recorrido</div>
 
-      <a
-        [class.active]="vista === 'venta-vendedor'"
-        (click)="cambiarVista('venta-vendedor')"
-      >
-        <span class="nav-contenido">
-          <span class="nav-icono" aria-hidden="true">$</span>
-          Vista de venta
-        </span>
+      <a [class.active]="vista === 'venta-vendedor'" (click)="cambiarVista('venta-vendedor')">
+        <span class="nav-contenido"><span class="nav-icono" aria-hidden="true">$</span>Vista de venta</span>
       </a>
 
-      <a
-        [class.active]="vista === 'catalogo-visual'"
-        (click)="cambiarVista('catalogo-visual')"
-      >
-        <span class="nav-contenido">
-          <span class="nav-icono" aria-hidden="true">▧</span>
-          Catálogo visual
-        </span>
+      <a [class.active]="vista === 'catalogo-visual'" (click)="cambiarVista('catalogo-visual')">
+        <span class="nav-contenido"><span class="nav-icono" aria-hidden="true">▧</span>Catálogo visual</span>
       </a>
     </nav>
 
@@ -147,50 +100,11 @@
         <div class="topbar-titulo">
           <div class="topbar-meta">
             <span class="etiqueta">Distribuidora Almada</span>
-            <span class="area-actual">
-              {{ rolActual === 'admin' ? 'Área administrativa' : 'Área vendedor' }}
-            </span>
+            <span class="area-actual">{{ rolActual === 'admin' ? 'Área administrativa' : 'Área vendedor' }}</span>
           </div>
 
-          <h1>
-            {{
-              vista === 'panel'
-                ? 'Panel general'
-                : vista === 'proveedores'
-                  ? 'Proveedores y precios'
-                  : vista === 'aumentos-precios'
-                    ? 'Aumentos de precios'
-                  : vista === 'clientes'
-                    ? 'Clientes'
-                    : vista === 'cuenta-corriente-lista'
-                      ? 'Cuenta corriente'
-                      : vista === 'cuenta-corriente'
-                        ? 'Detalle de cuenta'
-                        : vista === 'vendedores'
-                          ? 'Vendedores y stock en viaje'
-                          : 'Mi jornada de venta'
-            }}
-          </h1>
-
-          <p>
-            {{
-              vista === 'panel'
-                ? 'Una vista clara del movimiento comercial.'
-                : vista === 'proveedores'
-                  ? 'Proveedores y costos de los productos.'
-                  : vista === 'aumentos-precios'
-                    ? 'Actualización porcentual con vista previa y registro de cambios.'
-                  : vista === 'clientes'
-                    ? 'Registro interno y datos comerciales de clientes.'
-                    : vista === 'cuenta-corriente-lista'
-                      ? 'Buscá clientes, revisá saldos y accedé a sus cuentas.'
-                      : vista === 'cuenta-corriente'
-                        ? 'Pagos, deudas y movimientos del cliente.'
-                        : vista === 'vendedores'
-                          ? 'Credenciales, cargas, devoluciones, ventas y mercadería de cada vendedor.'
-                          : 'Registrá ventas directamente desde tu mercadería disponible.'
-            }}
-          </p>
+          <h1>{{ tituloVista() }}</h1>
+          <p>{{ descripcionVista() }}</p>
         </div>
 
         <div class="topbar-acciones">
@@ -204,57 +118,43 @@
             </span>
           </div>
 
-          <button
-            type="button"
-            class="btn-cerrar-sesion"
-            (click)="cerrarSesion()"
-          >
-            Cerrar sesión
-          </button>
+          <button type="button" class="btn-cerrar-sesion" (click)="cerrarSesion()">Cerrar sesión</button>
         </div>
       </header>
 
-      <section *ngIf="error" class="error">
-        {{ error }}
-      </section>
+      <section *ngIf="error" class="error">{{ error }}</section>
+
+      <app-panel *ngIf="rolActual === 'admin' && vista === 'panel'"></app-panel>
 
       <app-productos-admin
-        *ngIf="rolActual === 'admin' && vista === 'panel'"
-        [resumen]="resumen"
-        (abrirAumentos)="cambiarVista('aumentos-precios')"
-        (resumenActualizado)="cargarResumen()">
+        *ngIf="rolActual === 'admin' && vista === 'productos'">
       </app-productos-admin>
-
-      <app-proveedores
-        *ngIf="rolActual === 'admin' && vista === 'proveedores'"
-        (resumenActualizado)="cargarResumen()">
+<app-proveedores
+        *ngIf="rolActual === 'admin' && vista === 'proveedores'">
       </app-proveedores>
 
       <app-aumentos-precios
         *ngIf="rolActual === 'admin' && vista === 'aumentos-precios'"
-        (volverPanel)="cambiarVista('panel')"
-        (preciosActualizados)="cargarResumen()">
+        (volverPanel)="cambiarVista('panel')">
       </app-aumentos-precios>
 
       <app-clientes
         *ngIf="rolActual === 'admin' && vista === 'clientes'"
-        (verCuenta)="abrirCuentaCorrienteDesdeClientes($event)"
-        (clientesActualizados)="cargarResumen()">
+        (verCuenta)="abrirCuentaCorrienteDesdeClientes($event)">
       </app-clientes>
 
       <app-cuentas-corrientes
-        *ngIf="
-          rolActual === 'admin' &&
-          (vista === 'cuenta-corriente-lista' || vista === 'cuenta-corriente')
-        "
-        [clienteInicial]="clienteCuentaInicial"
-        (resumenActualizado)="cargarResumen()">
+        *ngIf="rolActual === 'admin' && (vista === 'cuenta-corriente-lista' || vista === 'cuenta-corriente')"
+        [clienteInicial]="clienteCuentaInicial">
       </app-cuentas-corrientes>
 
       <app-vendedores
-        *ngIf="rolActual === 'admin' && vista === 'vendedores'"
-        (resumenActualizado)="cargarResumen()">
+        *ngIf="rolActual === 'admin' && vista === 'vendedores'">
       </app-vendedores>
+
+      <app-stock-viaje
+        *ngIf="rolActual === 'admin' && vista === 'stock-viaje'">
+      </app-stock-viaje>
 
       <app-venta-vendedor
         *ngIf="rolActual === 'vendedor' && vista === 'venta-vendedor'"

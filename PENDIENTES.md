@@ -52,6 +52,5 @@
 ### Etapa 5 — Entrega
 
 - [ ] Pruebas integrales.
-- [ ] Importación de datos propios de Almada 2.
 - [ ] Copias de seguridad.
 - [ ] Preparación para producción.

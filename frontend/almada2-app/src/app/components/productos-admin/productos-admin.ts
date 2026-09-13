@@ -3,7 +3,6 @@ import {
   Component,
   ChangeDetectorRef,
   EventEmitter,
-  Input,
   OnInit,
   Output,
   inject
@@ -23,8 +22,6 @@ export class ProductosAdminComponent implements OnInit {
   private api = inject(ApiService);
   private cdr = inject(ChangeDetectorRef);
 
-  @Input() resumen: any = null;
-  @Output() abrirAumentos = new EventEmitter<void>();
   @Output() resumenActualizado = new EventEmitter<void>();
 
   productos: any[] = [];

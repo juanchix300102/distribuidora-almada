@@ -1,0 +1,29 @@
+ALMADA 2 - ACTUALIZACION FUNCIONAL 02
+Vendedores + Stock en viaje + Ventas
+
+1. Hacer una copia de seguridad del proyecto actual.
+2. Descomprimir este ZIP sobre la carpeta raiz de Almada 2 y reemplazar los archivos existentes.
+3. Reiniciar el backend. Al iniciar, Flask crea automaticamente las nuevas tablas.
+4. Reiniciar Angular.
+
+Backend:
+  cd backend
+  python app.py
+
+Frontend (otra terminal):
+  cd frontend\almada2-app
+  ng serve
+
+PRUEBA RAPIDA
+- Iniciar sesion como administrador.
+- Abrir "Vendedores y viajes".
+- Crear un vendedor con usuario y contrasena.
+- Seleccionarlo y asignarle mercaderia.
+- Cerrar sesion.
+- Entrar con el usuario del vendedor.
+- Seleccionar cliente, agregar productos y confirmar una venta.
+- Si la forma es Cuenta corriente, comprobar la deuda del cliente desde el administrador.
+
+NOTA
+El stock en viaje es mercaderia cargada por el vendedor para vender.
+Al asignarla sale del stock de deposito; al devolverla vuelve al deposito; al venderla se descuenta del stock en viaje.

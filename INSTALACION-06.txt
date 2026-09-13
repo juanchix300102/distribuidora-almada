@@ -1,0 +1,66 @@
+ALMADA 2 - ORGANIZACION MODULAR 06
+=================================
+
+Esta actualización está preparada para aplicarse sobre la versión actual de Almada 2.
+No borra ni modifica la base de datos.
+
+1) HACER RESPALDO / COMMIT
+--------------------------
+Desde la raíz de Almada 2:
+
+git add .
+git commit -m "Version estable antes de modularizar todas las secciones"
+
+2) DESCOMPRIMIR
+---------------
+Descomprimir el contenido de este ZIP sobre la raíz del proyecto Almada 2 y aceptar reemplazar archivos.
+
+3) ELIMINAR CARPETA OBSOLETA SI TODAVIA EXISTE
+-----------------------------------------------
+Eliminar manualmente:
+
+frontend\almada2-app\src\app\components\cuentas corrientes
+
+La carpeta correcta es:
+
+frontend\almada2-app\src\app\components\cuentas-corrientes
+
+4) BACKEND
+----------
+
+cd backend
+.\venv\Scripts\Activate.ps1
+python app.py
+
+5) FRONTEND
+-----------
+En otra terminal:
+
+cd frontend\almada2-app
+npm start
+
+Para usar el catálogo en tablet dentro de la misma red:
+
+npm run start:lan
+
+6) COMPROBAR
+------------
+Administrador:
+- Panel
+- Productos
+- Proveedores
+- Aumentos de precios
+- Clientes
+- Cuenta corriente
+- Vendedores
+- Stock en viaje
+- Catálogo visual
+
+Vendedor:
+- Vista de venta
+- Catálogo visual
+
+IMPORTANTE
+----------
+Esta versión reorganiza el código. No agrega Gastos, Saldos ni Reportes todavía.
+No cambia las reglas de stock en viaje, ventas, catálogo visual ni aumentos de precios.

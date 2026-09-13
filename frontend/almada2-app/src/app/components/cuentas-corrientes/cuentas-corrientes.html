@@ -1,0 +1,266 @@
+<section *ngIf="!clienteCuentaSeleccionado" class="panel">
+  <div class="panel-header">
+    <div>
+      <h2>Cuenta corriente</h2>
+      <p>Buscá un cliente para revisar deuda, pagos e historial de movimientos.</p>
+    </div>
+
+    <button type="button" class="btn-secundario" (click)="cargarClientes()">
+      Actualizar
+    </button>
+  </div>
+
+  <section *ngIf="error" class="error">
+    {{ error }}
+  </section>
+
+  <p *ngIf="cargandoClientes">Cargando clientes...</p>
+
+  <div class="cuenta-resumen">
+    <div>
+      <span>Clientes totales</span>
+      <strong>{{ clientes.length }}</strong>
+    </div>
+
+    <div>
+      <span>Clientes con deuda</span>
+      <strong>{{ totalClientesConDeuda() }}</strong>
+    </div>
+
+    <div>
+      <span>Saldo total pendiente</span>
+      <strong>${{ formatearMoneda(totalSaldoClientes()) }}</strong>
+    </div>
+  </div>
+
+  <div class="cuenta-toolbar">
+    <input
+      type="text"
+      placeholder="Buscar por cliente, número, localidad, teléfono o usuario..."
+      [(ngModel)]="busquedaCuenta"
+      name="busquedaCuenta"
+    />
+
+    <select [(ngModel)]="filtroCuenta" name="filtroCuenta">
+      <option value="todos">Todos los clientes</option>
+      <option value="con-deuda">Solo con deuda</option>
+      <option value="sin-deuda">Sin deuda</option>
+    </select>
+  </div>
+
+  <div *ngIf="!cargandoClientes && clientesCuentaFiltrados().length === 0" class="sin-datos">
+    No se encontraron clientes con esos filtros.
+  </div>
+
+  <div class="tabla-scroll" *ngIf="!cargandoClientes && clientesCuentaFiltrados().length > 0">
+    <table>
+      <thead>
+        <tr>
+          <th>N° Cliente</th>
+          <th>Cliente</th>
+          <th>Localidad</th>
+          <th>Teléfono</th>
+          <th>Usuario</th>
+          <th>Saldo actual</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let cliente of clientesCuentaFiltrados()">
+          <td>{{ cliente.numero_cliente }}</td>
+
+          <td>
+            <strong>{{ cliente.nombre }}</strong>
+            <small>{{ cliente.email || '' }}</small>
+          </td>
+
+          <td>{{ cliente.localidad || '-' }}</td>
+          <td>{{ cliente.telefono || '-' }}</td>
+          <td>{{ cliente.usuario || '-' }}</td>
+
+          <td>
+            <strong>${{ formatearMoneda(cliente.saldo_actual) }}</strong>
+          </td>
+
+          <td>
+            <span class="estado" [class.bajo]="cliente.saldo_actual > 0">
+              {{ cliente.saldo_actual > 0 ? 'Con deuda' : 'Al día' }}
+            </span>
+          </td>
+
+          <td class="acciones">
+            <button type="button" class="btn-editar" (click)="abrirCuentaCorriente(cliente)">
+              Ver cuenta
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section *ngIf="clienteCuentaSeleccionado" class="panel">
+  <div class="panel-header">
+    <div>
+      <h2>Cuenta corriente</h2>
+
+      <p>
+        Cliente:
+        <strong>{{ clienteCuentaSeleccionado.nombre }}</strong>
+        | N° {{ clienteCuentaSeleccionado.numero_cliente }}
+      </p>
+    </div>
+
+    <button type="button" class="btn-secundario" (click)="volverALista()">
+      Volver a cuenta corriente
+    </button>
+  </div>
+
+  <section *ngIf="error" class="error">
+    {{ error }}
+  </section>
+
+  <p *ngIf="cargandoCuenta">Cargando cuenta corriente...</p>
+
+  <div class="cuenta-resumen" *ngIf="cuentaCliente">
+    <div>
+      <span>Saldo actual</span>
+      <strong>${{ formatearMoneda(cuentaCliente.saldo_actual) }}</strong>
+    </div>
+
+    <div>
+      <span>Movimientos</span>
+      <strong>{{ movimientosCuenta.length }}</strong>
+    </div>
+  </div>
+
+  <div class="cuenta-formularios">
+    <section class="formulario formulario-mini">
+      <h2>Cargar deuda / venta</h2>
+
+      <form (ngSubmit)="agregarMovimientoCuenta()">
+        <div class="form-grid grande">
+          <select [(ngModel)]="movimientoCuentaForm.tipo" name="tipoMovimientoCuenta">
+            <option value="Venta">Venta</option>
+            <option value="Deuda">Deuda</option>
+            <option value="Ajuste">Ajuste</option>
+          </select>
+
+          <input
+            type="text"
+            placeholder="Descripción"
+            [(ngModel)]="movimientoCuentaForm.descripcion"
+            name="descripcionMovimientoCuenta"
+            required
+          />
+
+          <input
+            type="number"
+            placeholder="Monto"
+            [(ngModel)]="movimientoCuentaForm.monto"
+            name="montoMovimientoCuenta"
+            required
+          />
+
+          <input
+            type="text"
+            placeholder="Comprobante opcional"
+            [(ngModel)]="movimientoCuentaForm.comprobante"
+            name="comprobanteMovimientoCuenta"
+          />
+        </div>
+
+        <button type="submit">
+          Cargar deuda
+        </button>
+      </form>
+    </section>
+
+    <section class="formulario formulario-mini">
+      <h2>Registrar pago</h2>
+
+      <form (ngSubmit)="registrarPagoCliente()">
+        <div class="form-grid grande">
+          <input
+            type="number"
+            placeholder="Monto pagado"
+            [(ngModel)]="pagoClienteForm.monto"
+            name="montoPagoCliente"
+            required
+          />
+
+          <select [(ngModel)]="pagoClienteForm.medio_pago" name="medioPagoCliente">
+            <option value="Efectivo">Efectivo</option>
+            <option value="Transferencia">Transferencia</option>
+            <option value="Cheque">Cheque</option>
+          </select>
+
+          <input
+            type="text"
+            placeholder="Comprobante opcional"
+            [(ngModel)]="pagoClienteForm.comprobante"
+            name="comprobantePagoCliente"
+          />
+
+          <input
+            type="text"
+            placeholder="Observaciones"
+            [(ngModel)]="pagoClienteForm.observaciones"
+            name="observacionesPagoCliente"
+          />
+        </div>
+
+        <button type="submit">
+          Registrar pago
+        </button>
+      </form>
+    </section>
+  </div>
+
+  <section class="panel panel-interno">
+    <div class="panel-header">
+      <div>
+        <h2>Historial de movimientos</h2>
+        <p>Entradas, pagos y saldo restante del cliente.</p>
+      </div>
+    </div>
+
+    <div *ngIf="movimientosCuenta.length === 0" class="sin-datos">
+      Este cliente todavía no tiene movimientos.
+    </div>
+
+    <div class="tabla-scroll" *ngIf="movimientosCuenta.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Descripción</th>
+            <th>Comprobante</th>
+            <th>Debe</th>
+            <th>Haber</th>
+            <th>Medio pago</th>
+            <th>Saldo</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let movimiento of movimientosCuenta">
+            <td>{{ movimiento.fecha }}</td>
+            <td>{{ movimiento.tipo }}</td>
+            <td>{{ movimiento.descripcion }}</td>
+            <td>{{ movimiento.comprobante || '-' }}</td>
+            <td>${{ formatearMoneda(movimiento.debe) }}</td>
+            <td>${{ formatearMoneda(movimiento.haber) }}</td>
+            <td>{{ movimiento.medio_pago || '-' }}</td>
+            <td>
+              <strong>${{ formatearMoneda(movimiento.saldo) }}</strong>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

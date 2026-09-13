@@ -1,0 +1,179 @@
+<section class="panel stock-panel">
+  <div class="panel-header">
+    <div>
+      <span class="kicker">Venta ambulante</span>
+      <h2>Stock en viaje</h2>
+      <p>Asignación, devolución y control de la mercadería que lleva cada vendedor.</p>
+    </div>
+  </div>
+
+  <section *ngIf="error" class="error">{{ error }}</section>
+  <p *ngIf="cargando">Cargando información...</p>
+
+  <div class="resumen-grid" *ngIf="!cargando">
+    <article class="resumen-card">
+      <span>Vendedores activos</span>
+      <strong>{{ vendedores.length }}</strong>
+      <small>Disponibles para asignación</small>
+    </article>
+    <article class="resumen-card">
+      <span>Unidades en viaje</span>
+      <strong>{{ vendedorSeleccionado ? totalUnidadesViaje : '—' }}</strong>
+      <small>{{ vendedorSeleccionado ? vendedorSeleccionado.nombre : 'Elegí un vendedor' }}</small>
+    </article>
+    <article class="resumen-card">
+      <span>Ventas del vendedor</span>
+      <strong>{{ vendedorSeleccionado ? ventasSeleccionadas.length : '—' }}</strong>
+      <small>Historial asociado</small>
+    </article>
+  </div>
+
+  <div class="layout-stock" *ngIf="!cargando">
+    <section class="bloque lista-vendedores">
+      <div class="bloque-titulo">
+        <div>
+          <span class="kicker">Seleccionar</span>
+          <h3>Vendedor</h3>
+        </div>
+      </div>
+
+      <div *ngIf="vendedores.length === 0" class="sin-datos">No hay vendedores activos.</div>
+
+      <div class="vendedor-lista" *ngIf="vendedores.length > 0">
+        <button
+          type="button"
+          *ngFor="let vendedor of vendedores"
+          class="vendedor-item"
+          [class.seleccionado]="vendedorSeleccionado?.id === vendedor.id"
+          (click)="seleccionarVendedor(vendedor)"
+        >
+          <span class="avatar">{{ (vendedor.nombre || 'V').charAt(0).toUpperCase() }}</span>
+          <span class="vendedor-info">
+            <strong>{{ vendedor.nombre }}</strong>
+            <small>{{ vendedor.zona || 'Sin zona asignada' }}</small>
+          </span>
+        </button>
+      </div>
+    </section>
+
+    <section class="bloque stock-bloque">
+      <ng-container *ngIf="vendedorSeleccionado; else elegirVendedor">
+        <div class="bloque-titulo">
+          <div>
+            <span class="kicker">Mercadería actual</span>
+            <h3>{{ vendedorSeleccionado.nombre }}</h3>
+            <p>{{ vendedorSeleccionado.zona || 'Sin zona asignada' }}</p>
+          </div>
+        </div>
+
+        <div class="asignacion-box">
+          <h4>Cargar mercadería al viaje</h4>
+          <input
+            class="buscador"
+            [(ngModel)]="filtroProducto"
+            name="filtroProducto"
+            placeholder="Buscar por código, producto o proveedor"
+          />
+
+          <div class="asignacion-grid">
+            <select [(ngModel)]="asignacionForm.producto_id" name="productoAsignar">
+              <option value="">Seleccionar producto</option>
+              <option *ngFor="let producto of productosFiltrados" [value]="producto.id">
+                {{ producto.codigo || 'S/C' }} · {{ producto.nombre }} · Stock depósito: {{ producto.stock }}
+              </option>
+            </select>
+
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="asignacionForm.cantidad"
+              name="cantidadAsignar"
+              placeholder="Cantidad"
+            />
+
+            <button type="button" (click)="asignarStock()">Asignar al viaje</button>
+          </div>
+        </div>
+
+        <div *ngIf="stockViaje.length === 0" class="sin-datos">
+          Este vendedor todavía no tiene mercadería en viaje.
+        </div>
+
+        <div class="tabla-scroll" *ngIf="stockViaje.length > 0">
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Producto</th>
+                <th>En viaje</th>
+                <th>Precio</th>
+                <th>Devolver</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of stockViaje">
+                <td>{{ item.codigo || '-' }}</td>
+                <td>
+                  <strong>{{ item.nombre }}</strong>
+                  <small>{{ item.proveedor || 'Sin proveedor' }}</small>
+                </td>
+                <td><span class="badge-stock">{{ item.cantidad }}</span></td>
+                <td>${{ formatearMoneda(item.precio_venta) }}</td>
+                <td>
+                  <div class="devolucion-control">
+                    <input
+                      type="number"
+                      min="1"
+                      [max]="item.cantidad"
+                      [(ngModel)]="devoluciones[item.producto_id]"
+                      [name]="'devolver-' + item.producto_id"
+                      placeholder="Cant."
+                    />
+                    <button type="button" class="btn-mini" (click)="devolver(item)">Devolver</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="subbloque" *ngIf="ventasSeleccionadas.length > 0">
+          <h4>Últimas ventas</h4>
+          <div class="movimientos-lista">
+            <article *ngFor="let venta of ventasSeleccionadas.slice(0, 8)">
+              <div>
+                <strong>Venta #{{ venta.id }}</strong>
+                <small>{{ venta.cliente || 'Consumidor final' }} · {{ venta.forma_pago }}</small>
+              </div>
+              <strong>${{ formatearMoneda(venta.total) }}</strong>
+            </article>
+          </div>
+        </div>
+
+        <div class="subbloque" *ngIf="movimientos.length > 0">
+          <h4>Movimientos recientes</h4>
+          <div class="movimientos-lista">
+            <article *ngFor="let movimiento of movimientos.slice(0, 10)">
+              <span class="mov-tipo">{{ movimiento.tipo }}</span>
+              <div>
+                <strong>{{ movimiento.producto }}</strong>
+                <small>{{ movimiento.fecha }}</small>
+              </div>
+              <strong [class.negativo]="movimiento.cantidad < 0">
+                {{ movimiento.cantidad > 0 ? '+' : '' }}{{ movimiento.cantidad }}
+              </strong>
+            </article>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #elegirVendedor>
+        <div class="estado-vacio-grande">
+          <span>⇄</span>
+          <h3>Elegí un vendedor</h3>
+          <p>Desde acá vas a cargar, devolver y controlar exclusivamente su stock en viaje.</p>
+        </div>
+      </ng-template>
+    </section>
+  </div>
+</section>

@@ -1,0 +1,67 @@
+<section class="panel-resumen">
+  <div class="panel-encabezado">
+    <div>
+      <span class="kicker">Resumen general</span>
+      <h2>Panel</h2>
+      <p>Indicadores principales de Almada 2 en una sola vista.</p>
+    </div>
+
+    <button type="button" class="btn-actualizar" (click)="cargarResumen()" [disabled]="cargando">
+      {{ cargando ? 'Actualizando...' : 'Actualizar' }}
+    </button>
+  </div>
+
+  <section *ngIf="error" class="error">{{ error }}</section>
+
+  <p *ngIf="cargando && !resumen" class="estado">Cargando resumen...</p>
+
+  <div class="cards" *ngIf="resumen">
+    <article class="card">
+      <span>Productos cargados</span>
+      <strong>{{ resumen.productos_cargados || 0 }}</strong>
+      <small>Catálogo interno</small>
+    </article>
+
+    <article class="card">
+      <span>Proveedores</span>
+      <strong>{{ resumen.proveedores || 0 }}</strong>
+      <small>Registrados</small>
+    </article>
+
+    <article class="card">
+      <span>Clientes</span>
+      <strong>{{ resumen.clientes || 0 }}</strong>
+      <small>Registro interno</small>
+    </article>
+
+    <article class="card warning">
+      <span>Stock bajo</span>
+      <strong>{{ resumen.stock_bajo || 0 }}</strong>
+      <small>Productos a revisar</small>
+    </article>
+
+    <article class="card">
+      <span>Vendedores activos</span>
+      <strong>{{ resumen.vendedores || 0 }}</strong>
+      <small>Equipo comercial</small>
+    </article>
+
+    <article class="card">
+      <span>Unidades en viaje</span>
+      <strong>{{ resumen.unidades_en_viaje || 0 }}</strong>
+      <small>Mercadería fuera del depósito</small>
+    </article>
+
+    <article class="card warning">
+      <span>Saldo clientes</span>
+      <strong>${{ formatearMoneda(resumen.saldo_clientes) }}</strong>
+      <small>Cuenta corriente</small>
+    </article>
+
+    <article class="card success">
+      <span>Ventas del mes</span>
+      <strong>${{ formatearMoneda(resumen.ventas_mes) }}</strong>
+      <small>Ventas registradas</small>
+    </article>
+  </div>
+</section>

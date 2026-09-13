@@ -1,19 +1,15 @@
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectorRef,
-  Component,
-  OnInit,
-  inject
-} from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 
-import { ApiService } from './services/api.service';
 import { AumentosPreciosComponent } from './components/aumentos-precios/aumentos-precios';
 import { AuthComponent } from './components/auth/auth';
 import { CatalogoVisualComponent } from './components/catalogo-visual/catalogo-visual';
 import { ClientesComponent } from './components/clientes/clientes';
-import { CuentasCorrientesComponent } from './components/cuentas corrientes/cuentas-corrientes';
+import { CuentasCorrientesComponent } from './components/cuentas-corrientes/cuentas-corrientes';
+import { PanelComponent } from './components/panel/panel';
 import { ProductosAdminComponent } from './components/productos-admin/productos-admin';
 import { ProveedoresComponent } from './components/proveedores/proveedores';
+import { StockViajeComponent } from './components/stock-viaje/stock-viaje';
 import { VendedoresComponent } from './components/vendedores/vendedores';
 import { VentaVendedorComponent } from './components/venta-vendedor/venta-vendedor';
 
@@ -27,8 +23,10 @@ import { VentaVendedorComponent } from './components/venta-vendedor/venta-vended
     CatalogoVisualComponent,
     ClientesComponent,
     CuentasCorrientesComponent,
+    PanelComponent,
     ProductosAdminComponent,
     ProveedoresComponent,
+    StockViajeComponent,
     VendedoresComponent,
     VentaVendedorComponent
   ],
@@ -36,14 +34,12 @@ import { VentaVendedorComponent } from './components/venta-vendedor/venta-vended
   styleUrl: './app.css'
 })
 export class App implements OnInit {
-  private api = inject(ApiService);
   private cdr = inject(ChangeDetectorRef);
 
   autenticado = false;
   rolActual = '';
   vista = 'login';
   error = '';
-  resumen: any = null;
   clienteCuentaInicial: any = null;
   usuarioId: number | null = null;
   vendedorId: number | null = null;
@@ -73,11 +69,6 @@ export class App implements OnInit {
 
     this.vista = respuesta.rol === 'admin' ? 'panel' : 'venta-vendedor';
     this.error = '';
-
-    if (respuesta.rol === 'admin') {
-      this.cargarResumen();
-    }
-
     this.cdr.detectChanges();
   }
 
@@ -86,7 +77,6 @@ export class App implements OnInit {
     this.rolActual = '';
     this.vista = 'login';
     this.error = '';
-    this.resumen = null;
     this.clienteCuentaInicial = null;
     this.usuarioId = null;
     this.vendedorId = null;
@@ -113,26 +103,15 @@ export class App implements OnInit {
     this.vista = vista;
     this.error = '';
 
-    if (vista === 'panel') {
-      this.cargarResumen();
-    }
-
     if (vista === 'cuenta-corriente-lista') {
       this.clienteCuentaInicial = null;
-      this.cargarResumen();
     }
 
     this.cdr.detectChanges();
   }
 
   cerrarCatalogoVisual(): void {
-    this.vista =
-      this.rolActual === 'admin' ? 'panel' : 'venta-vendedor';
-
-    if (this.rolActual === 'admin') {
-      this.cargarResumen();
-    }
-
+    this.vista = this.rolActual === 'admin' ? 'panel' : 'venta-vendedor';
     this.cdr.detectChanges();
   }
 
@@ -142,16 +121,37 @@ export class App implements OnInit {
     this.cdr.detectChanges();
   }
 
-  cargarResumen(): void {
-    this.api.obtenerResumen().subscribe({
-      next: (respuesta) => {
-        this.resumen = respuesta;
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.error = 'No se pudo cargar el resumen.';
-        this.cdr.detectChanges();
-      }
-    });
+  tituloVista(): string {
+    const titulos: Record<string, string> = {
+      panel: 'Panel general',
+      productos: 'Productos',
+      proveedores: 'Proveedores y precios',
+      'aumentos-precios': 'Aumentos de precios',
+      clientes: 'Clientes',
+      'cuenta-corriente-lista': 'Cuenta corriente',
+      'cuenta-corriente': 'Detalle de cuenta',
+      vendedores: 'Vendedores',
+      'stock-viaje': 'Stock en viaje',
+      'venta-vendedor': 'Mi jornada de venta'
+    };
+
+    return titulos[this.vista] || 'Almada 2';
+  }
+
+  descripcionVista(): string {
+    const descripciones: Record<string, string> = {
+      panel: 'Una vista clara del movimiento comercial.',
+      productos: 'Alta, edición, variantes, stock y precios de los productos.',
+      proveedores: 'Proveedores y costos de los productos.',
+      'aumentos-precios': 'Actualización porcentual con vista previa y registro de cambios.',
+      clientes: 'Registro interno y datos comerciales de clientes.',
+      'cuenta-corriente-lista': 'Buscá clientes, revisá saldos y accedé a sus cuentas.',
+      'cuenta-corriente': 'Pagos, deudas y movimientos del cliente.',
+      vendedores: 'Usuarios, credenciales, zonas y estado de cada vendedor.',
+      'stock-viaje': 'Carga, devolución y control de la mercadería que lleva cada vendedor.',
+      'venta-vendedor': 'Registrá ventas directamente desde la mercadería disponible.'
+    };
+
+    return descripciones[this.vista] || '';
   }
 }
